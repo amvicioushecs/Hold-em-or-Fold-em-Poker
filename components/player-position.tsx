@@ -7,6 +7,8 @@ import { usePokerGame } from "@/hooks/use-poker-game"
 import VideoPlayer from "./video-player"
 import ChatBubble from "./chat-bubble"
 import Card from "./card"
+import BlindMarker from "./blind-marker"
+import PlayerTurnIndicator from "./player-turn-indicator"
 
 interface PlayerPositionProps {
   playerId: string
@@ -17,7 +19,7 @@ interface PlayerPositionProps {
 export default function PlayerPosition({ playerId, position, showCards = false }: PlayerPositionProps) {
   const { players } = useWebRTC()
   const { messages } = useChat()
-  const { gameState } = usePokerGame()
+  const { gameState, handleTimeUp, turnDuration } = usePokerGame()
   const player = players.get(playerId)
   const [lastMessage, setLastMessage] = useState<{ message: string; timestamp: number } | null>(null)
 
@@ -38,6 +40,13 @@ export default function PlayerPosition({ playerId, position, showCards = false }
   const playerState = gameState?.players.find((p) => p.id === playerId)
   const playerCards = playerState?.cards || []
 
+  // Check if this player is small blind or big blind
+  const isSmallBlind = gameState && gameState.players[gameState.smallBlindIndex]?.id === playerId
+  const isBigBlind = gameState && gameState.players[gameState.bigBlindIndex]?.id === playerId
+
+  // Check if it's this player's turn
+  const isPlayerTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === playerId
+
   const positionClasses: Record<string, string> = {
     top: "top-1 left-1/2 -translate-x-1/2 md:top-4",
     "top-left": "top-8 left-1 md:top-16 md:left-4",
@@ -52,8 +61,21 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       className={`absolute bg-sidebar-border shadow-xl text-transparent border-0 rounded-4xl ${positionClasses[position]} z-30`}
     >
       <div className="relative">
+        {/* Turn Timer Indicator */}
+        <PlayerTurnIndicator
+          position={position}
+          isActive={isPlayerTurn || false}
+          onTimeUp={handleTimeUp}
+          duration={turnDuration}
+        />
+
         {/* Video Feed */}
         <div className="relative w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 shadow-md md:shadow-lg border border-border md:border-2 rounded-md md:rounded-lg overflow-hidden">
+          {/* Active Turn Glow */}
+          {isPlayerTurn && (
+            <div className="absolute inset-0 rounded-md md:rounded-lg ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" />
+          )}
+
           <VideoPlayer
             stream={player.stream}
             name={player.name}
@@ -61,6 +83,10 @@ export default function PlayerPosition({ playerId, position, showCards = false }
             videoEnabled={player.videoEnabled}
             audioEnabled={player.audioEnabled}
           />
+
+          {/* Blind Markers */}
+          {isSmallBlind && <BlindMarker type="SB" />}
+          {isBigBlind && <BlindMarker type="BB" />}
 
           {/* Player Cards */}
           {showCards && playerCards.length > 0 && (
@@ -86,7 +112,12 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       {/* Player Info */}
       <div className="mt-1 md:mt-2 text-center backdrop-blur-sm rounded px-1.5 py-0.5 md:px-2 md:py-1 md:shadow max-w-[80px] md:max-w-none mx-auto text-slate-50 shadow-none bg-black border-solid border opacity-100 border-slate-700">
         <p className="text-[10px] md:text-xs font-semibold truncate text-card-foreground">{player.name}</p>
-        <p className="text-[9px] md:text-xs text-muted-foreground">${playerState?.chips || 0}</p>
+        <div className="flex items-center justify-center gap-1">
+          <p className="text-[9px] md:text-xs text-muted-foreground">${playerState?.chips || 0}</p>
+          {playerState && playerState.bet > 0 && (
+            <span className="text-[8px] md:text-[10px] text-amber-400 font-bold">(${playerState.bet})</span>
+          )}
+        </div>
       </div>
     </div>
   )

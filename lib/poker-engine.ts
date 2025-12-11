@@ -1,5 +1,15 @@
-import type { Card, Rank, HandEvaluation, HandRank, GameState, PlayerState, PlayerAction } from "@/types/poker"
+import type {
+  Card,
+  Rank,
+  HandEvaluation,
+  HandRank,
+  GameState,
+  PlayerState,
+  PlayerAction,
+  GameMode,
+} from "@/types/poker"
 import { deckManager } from "./deck-manager"
+import { calculateSidePots, distributePots } from "./side-pot-manager"
 
 const RANKS: Rank[] = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
@@ -34,16 +44,24 @@ const HAND_RANK_VALUES: Record<HandRank, number> = {
 
 // Create and shuffle a deck using DeckManager
 export function createDeck(): Card[] {
+  console.log("[v0] Creating and shuffling deck")
   deckManager.reset()
   return []
 }
 
 // Deal cards to players using DeckManager
-export function dealCards(deck: Card[], numPlayers: number): { playerCards: Card[][]; remainingDeck: Card[] } {
+export function dealCards(
+  deck: Card[],
+  numPlayers: number,
+  gameMode: GameMode = "sng",
+): { playerCards: Card[][]; remainingDeck: Card[] } {
   const playerCards: Card[][] = Array.from({ length: numPlayers }, () => [])
 
-  // Deal 2 cards to each player
-  for (let i = 0; i < 2; i++) {
+  // Deal 4 cards for Omaha, 2 cards for all other variants
+  const cardsPerPlayer = gameMode === "omaha" ? 4 : 2
+  console.log(`[v0] Dealing ${cardsPerPlayer} cards to ${numPlayers} players (${gameMode} mode)`)
+
+  for (let i = 0; i < cardsPerPlayer; i++) {
     for (let j = 0; j < numPlayers; j++) {
       const card = deckManager.drawOne()
       if (card) {
@@ -52,6 +70,7 @@ export function dealCards(deck: Card[], numPlayers: number): { playerCards: Card
     }
   }
 
+  console.log("[v0] Cards dealt:", playerCards)
   return { playerCards, remainingDeck: [] }
 }
 
@@ -66,14 +85,17 @@ export function dealCommunityCards(
   const burnCard = deckManager.drawOne()
   if (burnCard) {
     deckManager.discard([burnCard])
+    console.log("[v0] Burned card:", burnCard)
   }
 
   if (phase === "flop") {
     cards.push(...deckManager.draw(3))
+    console.log("[v0] Dealt flop:", cards)
   } else {
     const card = deckManager.drawOne()
     if (card) {
       cards.push(card)
+      console.log(`[v0] Dealt ${phase}:`, card)
     }
   }
 
@@ -93,6 +115,33 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
     const evaluation = evaluateFiveCards(combo)
     if (!bestHand || evaluation.value > bestHand.value) {
       bestHand = evaluation
+    }
+  }
+
+  return bestHand!
+}
+
+export function evaluateOmahaHand(holeCards: Card[], communityCards: Card[]): HandEvaluation {
+  if (holeCards.length !== 4) {
+    throw new Error("Omaha requires exactly 4 hole cards")
+  }
+  if (communityCards.length !== 5) {
+    throw new Error("Omaha requires exactly 5 community cards")
+  }
+
+  let bestHand: HandEvaluation | null = null
+
+  // Generate all combinations using exactly 2 hole cards + 3 community cards
+  for (let i = 0; i < holeCards.length; i++) {
+    for (let j = i + 1; j < holeCards.length; j++) {
+      const communityTrios = getCombinations(communityCards, 3)
+      for (const trio of communityTrios) {
+        const hand = [holeCards[i], holeCards[j], ...trio]
+        const evaluation = evaluateFiveCards(hand)
+        if (!bestHand || evaluation.value > bestHand.value) {
+          bestHand = evaluation
+        }
+      }
     }
   }
 
@@ -303,26 +352,56 @@ function getQuadValue(rankCounts: Record<string, number>): number {
 }
 
 // Determine winners
-export function determineWinners(players: PlayerState[], communityCards: Card[]): string[] {
+export function determineWinners(players: PlayerState[], communityCards: Card[], gameMode: GameMode = "sng"): string[] {
+  console.log("[v0] Determining winners for game mode:", gameMode)
   const activePlayers = players.filter((p) => !p.folded)
+  console.log(
+    "[v0] Active players:",
+    activePlayers.map((p) => p.name),
+  )
 
   if (activePlayers.length === 1) {
+    console.log("[v0] Winner by default (all others folded):", activePlayers[0].name)
     return [activePlayers[0].id]
   }
 
-  const evaluations = activePlayers.map((player) => ({
-    playerId: player.id,
-    evaluation: evaluateHand([...player.cards, ...communityCards]),
-  }))
+  const evaluations = activePlayers.map((player) => {
+    let evaluation: HandEvaluation
+
+    if (gameMode === "omaha") {
+      // Use Omaha-specific evaluation (exactly 2 hole + 3 community)
+      evaluation = evaluateOmahaHand(player.cards, communityCards)
+      console.log(`[v0] ${player.name} Omaha hand:`, evaluation.description, "value:", evaluation.value)
+    } else {
+      // Use standard Texas Hold'em evaluation
+      evaluation = evaluateHand([...player.cards, ...communityCards])
+      console.log(`[v0] ${player.name} hand:`, evaluation.description, "value:", evaluation.value)
+    }
+
+    return {
+      playerId: player.id,
+      evaluation,
+    }
+  })
 
   const maxValue = Math.max(...evaluations.map((e) => e.evaluation.value))
-  return evaluations.filter((e) => e.evaluation.value === maxValue).map((e) => e.playerId)
+  const winners = evaluations.filter((e) => e.evaluation.value === maxValue).map((e) => e.playerId)
+  console.log("[v0] Winners:", winners)
+  return winners
 }
 
 // Initialize game state
-export function initializeGame(playerIds: string[], playerNames: string[], startingChips = 1000): GameState {
+export function initializeGame(
+  playerIds: string[],
+  playerNames: string[],
+  seatNumbers: number[],
+  startingChips = 1000,
+  dealerSeat = 1,
+  gameMode: GameMode = "sng",
+): GameState {
+  console.log("[v0] Initializing game:", { playerIds, playerNames, seatNumbers, startingChips, dealerSeat, gameMode })
   deckManager.reset()
-  const { playerCards } = dealCards([], playerIds.length)
+  const { playerCards } = dealCards([], playerIds.length, gameMode)
 
   const players: PlayerState[] = playerIds.map((id, index) => ({
     id,
@@ -334,20 +413,112 @@ export function initializeGame(playerIds: string[], playerNames: string[], start
     allIn: false,
     isActive: true,
     lastAction: undefined,
+    seatNumber: seatNumbers[index],
   }))
+
+  // Sort players by seat number for proper order
+  players.sort((a, b) => a.seatNumber - b.seatNumber)
+
+  // Find dealer index (player with dealer seat)
+  const dealerIndex = players.findIndex((p) => p.seatNumber === dealerSeat)
+  const smallBlindIndex = (dealerIndex + 1) % players.length
+  const bigBlindIndex = (dealerIndex + 2) % players.length
+
+  console.log("[v0] Dealer at index:", dealerIndex, "seat:", dealerSeat)
+  console.log("[v0] Small blind:", players[smallBlindIndex]?.name, "Big blind:", players[bigBlindIndex]?.name)
 
   return {
     phase: "pre-flop",
     pot: 0,
+    sidePots: [],
     communityCards: [],
     currentBet: 0,
     currentPlayerIndex: 0,
-    dealerIndex: 0,
-    smallBlindIndex: 1,
-    bigBlindIndex: 2,
+    dealerIndex,
+    dealerSeatNumber: dealerSeat,
+    smallBlindIndex,
+    bigBlindIndex,
     players,
     deck: [],
     winners: [],
+    handNumber: 1,
+    gameMode,
+  }
+}
+
+// Start new hand with rotated dealer
+export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number): GameState {
+  console.log("[v0] Starting new hand #", currentState.handNumber + 1)
+  deckManager.reset()
+
+  // Reset player states
+  const players = currentState.players.map((p) => ({
+    ...p,
+    bet: 0,
+    cards: [],
+    folded: false,
+    allIn: false,
+    lastAction: undefined,
+  }))
+
+  // Rotate dealer to next active player
+  let newDealerIndex = (currentState.dealerIndex + 1) % players.length
+  while (players[newDealerIndex].chips === 0 && newDealerIndex !== currentState.dealerIndex) {
+    newDealerIndex = (newDealerIndex + 1) % players.length
+  }
+
+  const newDealerSeat = players[newDealerIndex].seatNumber
+
+  // Calculate blinds positions
+  const smallBlindIndex = (newDealerIndex + 1) % players.length
+  const bigBlindIndex = (newDealerIndex + 2) % players.length
+
+  // Deal new cards with game mode
+  const { playerCards } = dealCards([], players.length, currentState.gameMode)
+  players.forEach((player, index) => {
+    player.cards = playerCards[index]
+  })
+
+  // Post blinds
+  const smallBlindPlayer = players[smallBlindIndex]
+  const bigBlindPlayer = players[bigBlindIndex]
+
+  const smallBlindAmount = Math.min(smallBlind, smallBlindPlayer.chips)
+  const bigBlindAmount = Math.min(bigBlind, bigBlindPlayer.chips)
+
+  smallBlindPlayer.chips -= smallBlindAmount
+  smallBlindPlayer.bet = smallBlindAmount
+  if (smallBlindPlayer.chips === 0) smallBlindPlayer.allIn = true
+
+  bigBlindPlayer.chips -= bigBlindAmount
+  bigBlindPlayer.bet = bigBlindAmount
+  if (bigBlindPlayer.chips === 0) bigBlindPlayer.allIn = true
+
+  const pot = smallBlindAmount + bigBlindAmount
+
+  // Start with player after big blind
+  const currentPlayerIndex = (bigBlindIndex + 1) % players.length
+
+  console.log("[v0] New dealer:", players[newDealerIndex].name, "at seat:", newDealerSeat)
+  console.log("[v0] Small blind:", players[smallBlindIndex].name, "Big blind:", players[bigBlindIndex].name)
+  console.log("[v0] Pot after blinds:", pot)
+
+  return {
+    phase: "pre-flop",
+    pot,
+    sidePots: [],
+    communityCards: [],
+    currentBet: bigBlindAmount,
+    currentPlayerIndex,
+    dealerIndex: newDealerIndex,
+    dealerSeatNumber: newDealerSeat,
+    smallBlindIndex,
+    bigBlindIndex,
+    players,
+    deck: [],
+    winners: [],
+    handNumber: currentState.handNumber + 1,
+    gameMode: currentState.gameMode,
   }
 }
 
@@ -358,25 +529,38 @@ export function processAction(
   action: PlayerAction,
   amount?: number,
 ): GameState {
+  console.log(`[v0] Processing action: ${action} by player ${playerId}`, amount ? `amount: ${amount}` : "")
   const newState = { ...gameState }
   const playerIndex = newState.players.findIndex((p) => p.id === playerId)
   const player = newState.players[playerIndex]
 
   if (!player || player.folded || player.allIn) {
+    console.log("[v0] Action rejected: player invalid, folded, or all-in")
     return gameState
+  }
+
+  if (newState.gameMode === "allin") {
+    // In all-in or fold mode, only allow fold or all-in actions
+    if (action !== "fold" && action !== "all-in") {
+      console.log("[v0] All-in or fold mode: only fold and all-in allowed, rejecting action:", action)
+      return gameState // Reject any action that isn't fold or all-in
+    }
   }
 
   switch (action) {
     case "fold":
       player.folded = true
       player.lastAction = "fold"
+      console.log(`[v0] ${player.name} folded`)
       break
 
     case "check":
       if (player.bet < newState.currentBet) {
+        console.log(`[v0] Check rejected: player bet ${player.bet} < current bet ${newState.currentBet}`)
         return gameState
       }
       player.lastAction = "check"
+      console.log(`[v0] ${player.name} checked`)
       break
 
     case "call":
@@ -385,14 +569,17 @@ export function processAction(
       player.bet += callAmount
       newState.pot += callAmount
       player.lastAction = "call"
+      console.log(`[v0] ${player.name} called ${callAmount}, pot now: ${newState.pot}`)
       if (player.chips === 0) {
         player.allIn = true
         player.lastAction = "all-in"
+        console.log(`[v0] ${player.name} is all-in after call`)
       }
       break
 
     case "raise":
       if (!amount || amount <= newState.currentBet) {
+        console.log(`[v0] Raise rejected: amount ${amount} <= current bet ${newState.currentBet}`)
         return gameState
       }
       const raiseAmount = Math.min(amount - player.bet, player.chips)
@@ -401,9 +588,11 @@ export function processAction(
       newState.pot += raiseAmount
       newState.currentBet = player.bet
       player.lastAction = "raise"
+      console.log(`[v0] ${player.name} raised to ${amount}, pot now: ${newState.pot}`)
       if (player.chips === 0) {
         player.allIn = true
         player.lastAction = "all-in"
+        console.log(`[v0] ${player.name} is all-in after raise`)
       }
       break
 
@@ -415,6 +604,7 @@ export function processAction(
       newState.currentBet = Math.max(newState.currentBet, player.bet)
       player.allIn = true
       player.lastAction = "all-in"
+      console.log(`[v0] ${player.name} went all-in for ${allInAmount}, pot now: ${newState.pot}`)
       break
   }
 
@@ -427,7 +617,10 @@ function advanceTurn(gameState: GameState): GameState {
 
   const allPlayersActed = activePlayers.every((p) => p.bet === newState.currentBet && p.lastAction !== undefined)
 
+  console.log(`[v0] Active players: ${activePlayers.length}, all acted: ${allPlayersActed}`)
+
   if (allPlayersActed || activePlayers.length <= 1) {
+    console.log("[v0] Advancing to next phase")
     return advancePhase(newState)
   }
 
@@ -435,17 +628,26 @@ function advanceTurn(gameState: GameState): GameState {
     newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
   } while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn)
 
+  console.log(`[v0] Next player: ${newState.players[newState.currentPlayerIndex].name}`)
+
   return newState
 }
 
 function advancePhase(gameState: GameState): GameState {
   const newState = { ...gameState }
 
+  if (newState.players.some((p) => p.allIn && p.bet > 0)) {
+    console.log("[v0] Calculating side pots")
+    newState.sidePots = calculateSidePots(newState.players)
+  }
+
   newState.players.forEach((player) => {
     player.bet = 0
     player.lastAction = undefined
   })
   newState.currentBet = 0
+
+  const oldPhase = newState.phase
 
   switch (newState.phase) {
     case "pre-flop":
@@ -468,7 +670,8 @@ function advancePhase(gameState: GameState): GameState {
 
     case "river":
       newState.phase = "showdown"
-      newState.winners = determineWinners(newState.players, newState.communityCards)
+      newState.winners = determineWinners(newState.players, newState.communityCards, newState.gameMode)
+      distributePots(newState.sidePots, newState.pot, newState.winners, newState.players)
       break
 
     case "showdown":
@@ -476,10 +679,25 @@ function advancePhase(gameState: GameState): GameState {
       break
   }
 
+  console.log(`[v0] Phase advanced: ${oldPhase} → ${newState.phase}`)
+
   newState.currentPlayerIndex = (newState.dealerIndex + 1) % newState.players.length
   while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn) {
     newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
   }
 
   return newState
+}
+
+export function compareHandValues(value1: number, value2: number): number {
+  return value1 - value2
+}
+
+export function getHandStrength(evaluation: HandEvaluation): number {
+  return Math.floor(evaluation.value / 1000000)
+}
+
+export function formatHandDescription(evaluation: HandEvaluation): string {
+  const cardStr = evaluation.cards.map((c) => `${c.rank}${c.suit[0].toUpperCase()}`).join(" ")
+  return `${evaluation.description} (${cardStr})`
 }

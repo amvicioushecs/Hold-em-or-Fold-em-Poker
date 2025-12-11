@@ -28,7 +28,22 @@ export function useAIOpponents() {
       const amountToCall = currentBet - bet
       const potOdds = amountToCall / (gameState.pot + amountToCall)
 
-      // Simple AI decision making
+      if (gameState.gameMode === "allin") {
+        // In all-in or fold mode, AI can only go all-in or fold
+        const random = Math.random()
+        if (random < 0.6) {
+          // 60% chance to go all-in (more aggressive in this mode)
+          makeAction(currentPlayer.id, "all-in")
+          sendMessage(currentPlayer.id, player.name, `All-in $${chips}`, "text")
+        } else {
+          // 40% chance to fold
+          makeAction(currentPlayer.id, "fold")
+          sendMessage(currentPlayer.id, player.name, "Fold", "text")
+        }
+        return
+      }
+
+      // Simple AI decision making for regular modes
       const random = Math.random()
       let action: "fold" | "check" | "call" | "raise" | "all-in"
       let amount: number | undefined

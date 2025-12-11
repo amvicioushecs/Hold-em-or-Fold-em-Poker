@@ -27,6 +27,7 @@ export interface HandEvaluation {
 
 export type PlayerAction = "fold" | "check" | "call" | "raise" | "all-in"
 export type GamePhase = "waiting" | "pre-flop" | "flop" | "turn" | "river" | "showdown" | "complete"
+export type GameMode = "sng" | "mtt" | "allin" | "omaha"
 
 export interface PlayerState {
   id: string
@@ -38,18 +39,29 @@ export interface PlayerState {
   allIn: boolean
   isActive: boolean
   lastAction?: PlayerAction
+  seatNumber: number // NEW: Track seat position
+}
+
+export interface SidePot {
+  amount: number
+  eligiblePlayers: string[] // Player IDs who can win this pot
+  cap: number // Max contribution per player for this pot
 }
 
 export interface GameState {
   phase: GamePhase
   pot: number
+  sidePots: SidePot[] // NEW: Track side pots for multiple all-ins
   communityCards: Card[]
   currentBet: number
   currentPlayerIndex: number
   dealerIndex: number
+  dealerSeatNumber: number // NEW: Track dealer seat
   smallBlindIndex: number
   bigBlindIndex: number
   players: PlayerState[]
   deck: Card[]
   winners: string[]
+  handNumber: number // NEW: Track hand count
+  gameMode: GameMode // NEW: Track which poker variant is being played
 }

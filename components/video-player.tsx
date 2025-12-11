@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { VideoOff, MicOff } from "lucide-react"
+import { VideoOff, MicOff, User } from "lucide-react"
 
 interface VideoPlayerProps {
   stream: MediaStream | null
@@ -33,14 +33,15 @@ export default function VideoPlayer({
       {stream && videoEnabled ? (
         <video ref={videoRef} autoPlay playsInline muted={muted || isLocal} className="w-full h-full object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/80">
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900">
           <div className="text-center">
-            <div className="w-10 h-10 md:w-12 md:h-12 mx-auto bg-muted-foreground/20 rounded-full flex items-center justify-center mb-2">
-              <span className="text-lg md:text-xl font-bold text-foreground">{name.charAt(0).toUpperCase()}</span>
+            <div className="w-10 h-10 md:w-12 md:h-12 mx-auto bg-slate-700/80 rounded-full flex items-center justify-center mb-2">
+              <User className="w-5 h-5 md:w-6 md:h-6 text-slate-400" />
             </div>
+            <p className="text-xs md:text-sm text-slate-400 font-medium">{name}</p>
             {!videoEnabled && (
-              <div className="flex items-center justify-center text-muted-foreground">
-                <VideoOff className="w-4 h-4" />
+              <div className="flex items-center justify-center text-slate-500 mt-1">
+                <VideoOff className="w-3 h-3 md:w-4 md:h-4" />
               </div>
             )}
           </div>
@@ -68,7 +69,7 @@ export default function VideoPlayer({
 
       {/* Local indicator */}
       {isLocal && (
-        <div className="absolute top-1 right-1 bg-primary/80 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] md:text-[10px] text-primary-foreground font-medium">
+        <div className="absolute top-1 right-1 bg-yellow-500/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[9px] md:text-[10px] text-black font-bold">
           YOU
         </div>
       )}

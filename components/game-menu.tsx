@@ -1,10 +1,14 @@
 "use client"
 
-import { X, Settings, Users, HelpCircle, LogOut } from "lucide-react"
+import { X, Settings, Users, HelpCircle, LogOut, Gift, BarChart3, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import StatsDashboard from "./stats-dashboard"
+import TournamentLobby from "./tournament-lobby"
+import FriendsPage from "./friends-page"
+import { useState } from "react"
 
 interface GameMenuProps {
   isOpen: boolean
@@ -12,6 +16,30 @@ interface GameMenuProps {
 }
 
 export default function GameMenu({ isOpen, onClose }: GameMenuProps) {
+  const [showStats, setShowStats] = useState(false)
+  const [showTournamentLobby, setShowTournamentLobby] = useState(false)
+  const [showFriends, setShowFriends] = useState(false)
+
+  if (showFriends) {
+    return <FriendsPage onClose={() => setShowFriends(false)} />
+  }
+
+  if (showTournamentLobby) {
+    return (
+      <TournamentLobby
+        onClose={() => setShowTournamentLobby(false)}
+        onStart={(id) => {
+          setShowTournamentLobby(false)
+          onClose()
+        }}
+      />
+    )
+  }
+
+  if (showStats) {
+    return <StatsDashboard onClose={() => setShowStats(false)} />
+  }
+
   if (!isOpen) return null
 
   return (
@@ -57,10 +85,13 @@ export default function GameMenu({ isOpen, onClose }: GameMenuProps) {
               <Button
                 variant="ghost"
                 className="w-full justify-start text-foreground hover:bg-accent"
-                onClick={onClose}
+                onClick={() => {
+                  onClose()
+                  setShowFriends(true)
+                }}
               >
                 <Users className="mr-3 h-5 w-5" />
-                Players
+                Friends
               </Button>
 
               <Button
@@ -72,12 +103,52 @@ export default function GameMenu({ isOpen, onClose }: GameMenuProps) {
                 How to Play
               </Button>
 
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  onClose()
+                  setShowStats(true)
+                }}
+              >
+                <BarChart3 className="mr-3 h-5 w-5" />
+                Statistics
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  onClose()
+                  setShowTournamentLobby(true)
+                }}
+              >
+                <Trophy className="mr-3 h-5 w-5" />
+                Tournaments
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-foreground hover:bg-accent"
+                onClick={() => {
+                  onClose()
+                  // Will show gift sender in a future update
+                  alert("Gift feature coming soon!")
+                }}
+              >
+                <Gift className="mr-3 h-5 w-5" />
+                Send Gifts
+              </Button>
+
               <Separator className="my-4" />
 
               <Button
                 variant="ghost"
                 className="w-full justify-start text-destructive hover:bg-destructive/10"
-                onClick={onClose}
+                onClick={() => {
+                  onClose()
+                  window.location.reload() // Temporary solution to return to lobby
+                }}
               >
                 <LogOut className="mr-3 h-5 w-5" />
                 Leave Table
