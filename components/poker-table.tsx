@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Menu, Plus, Minus } from "lucide-react"
@@ -35,10 +35,13 @@ export default function PokerTable() {
   const { gameState, startGame, makeAction, handleTimeUp, turnDuration } = usePokerGame()
   const [playerIds, setPlayerIds] = useState<string[]>([])
 
-  useEffect(() => {
-    const ids = Array.from(players.keys()).filter((id) => id !== "local")
-    setPlayerIds(ids)
+  const calculatedPlayerIds = useMemo(() => {
+    return Array.from(players.keys()).filter((id) => id !== "local")
   }, [players])
+
+  useEffect(() => {
+    setPlayerIds(calculatedPlayerIds)
+  }, [calculatedPlayerIds])
 
   // Start game when we have enough players (at least 2)
   useEffect(() => {
@@ -71,7 +74,7 @@ export default function PokerTable() {
     }
   }, [players, gameState, gameStarted, startGame, showLobby, selectedTable, selectedSeat])
 
-  const positions = ["top", "top-left", "top-right", "bottom-left", "bottom-right"]
+  const positions = useMemo(() => ["top", "top-left", "top-right", "bottom-left", "bottom-right"], [])
 
   // Get local player's state
   const localPlayerState = gameState?.players.find((p) => p.id === "local")
@@ -88,14 +91,13 @@ export default function PokerTable() {
   const minRaise = currentBet > 0 ? currentBet * 2 : 20
   const maxRaise = localPlayerChips + localPlayerBet
 
-  // Handle player actions
-  const handleFold = () => {
+  const handleFold = useCallback(() => {
     if (!isLocalPlayerTurn || !gameState) return
     makeAction("local", "fold")
     sendMessage("local", "You", "Fold", "text")
-  }
+  }, [isLocalPlayerTurn, gameState, makeAction, sendMessage])
 
-  const handleCall = () => {
+  const handleCall = useCallback(() => {
     if (!isLocalPlayerTurn || !gameState) return
 
     if (isAllInOrFoldMode) {
@@ -117,9 +119,9 @@ export default function PokerTable() {
       makeAction("local", "call")
       sendMessage("local", "You", `Call $${amountToCall}`, "text")
     }
-  }
+  }, [isLocalPlayerTurn, gameState, isAllInOrFoldMode, amountToCall, localPlayerChips, makeAction, sendMessage])
 
-  const handleRaise = () => {
+  const handleRaise = useCallback(() => {
     if (!isLocalPlayerTurn || !gameState) return
 
     const raiseTotal = raiseAmount[0]
@@ -135,33 +137,36 @@ export default function PokerTable() {
     }
 
     setIsRaiseBarOpen(false)
-  }
+  }, [isLocalPlayerTurn, gameState, raiseAmount, localPlayerChips, localPlayerBet, makeAction, sendMessage])
 
-  const getCallButtonLabel = () => {
+  const getCallButtonLabel = useCallback(() => {
     if (isAllInOrFoldMode) return `All-in $${localPlayerChips}`
     if (amountToCall === 0) return "Check"
     if (amountToCall >= localPlayerChips) return `All-in $${localPlayerChips}`
     return `Call $${amountToCall}`
-  }
+  }, [isAllInOrFoldMode, amountToCall, localPlayerChips])
 
-  const canRaise = !isAllInOrFoldMode && localPlayerChips > amountToCall && amountToCall < maxRaise
+  const canRaise = useMemo(
+    () => !isAllInOrFoldMode && localPlayerChips > amountToCall && amountToCall < maxRaise,
+    [isAllInOrFoldMode, localPlayerChips, amountToCall, maxRaise],
+  )
+
+  const handleRaiseAmountChange = useCallback((value: number[]) => {
+    setRaiseAmount(value)
+  }, [])
+
+  const handleIncrementRaise = useCallback(() => {
+    setRaiseAmount([Math.min(maxRaise, raiseAmount[0] + 10)])
+  }, [maxRaise, raiseAmount])
+
+  const handleDecrementRaise = useCallback(() => {
+    setRaiseAmount([Math.max(minRaise, raiseAmount[0] - 10)])
+  }, [minRaise, raiseAmount])
 
   if (showLobby) {
     return (
       <Lobby
         onStartGame={(table, seatId) => {
-          console.log(
-            "[v0] Starting game at table:",
-            table.name,
-            "Seat:",
-            seatId,
-            "Blinds:",
-            table.smallBlind,
-            "/",
-            table.bigBlind,
-            "Mode:",
-            table.gameMode,
-          )
           setSelectedTable(table)
           setSelectedSeat(seatId)
           setShowLobby(false)
@@ -370,14 +375,14 @@ export default function PokerTable() {
                       <Button
                         size="icon"
                         variant="outline"
-                        onClick={() => setRaiseAmount([Math.max(minRaise, raiseAmount[0] - 10)])}
-                        className="touch-manipulation"
+                        onClick={handleDecrementRaise}
+                        className="touch-manipulation bg-transparent"
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
                       <Slider
                         value={raiseAmount}
-                        onValueChange={setRaiseAmount}
+                        onValueChange={handleRaiseAmountChange}
                         max={maxRaise}
                         min={minRaise}
                         step={10}
@@ -386,8 +391,8 @@ export default function PokerTable() {
                       <Button
                         size="icon"
                         variant="outline"
-                        onClick={() => setRaiseAmount([Math.min(maxRaise, raiseAmount[0] + 10)])}
-                        className="touch-manipulation"
+                        onClick={handleIncrementRaise}
+                        className="touch-manipulation bg-transparent"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
@@ -424,7 +429,7 @@ export default function PokerTable() {
           </div>
           <Slider
             value={raiseAmount}
-            onValueChange={setRaiseAmount}
+            onValueChange={handleRaiseAmountChange}
             max={maxRaise}
             min={minRaise}
             step={10}

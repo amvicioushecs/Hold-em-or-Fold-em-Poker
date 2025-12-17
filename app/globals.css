@@ -143,6 +143,9 @@
 
 .card-flip {
   animation: cardFlip 0.6s ease-in-out;
+  /* GPU acceleration for smoother animations */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Pulse animation for turn indicator */
@@ -156,7 +159,11 @@
   }
 }
 
-/* Smooth transitions */
+.animate-pulse {
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
 * {
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -196,14 +203,16 @@
   -ms-user-select: none;
 }
 
-/* Card shadows */
 .card-shadow {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
-/* Pot display glow */
 .pot-glow {
   box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+  will-change: box-shadow;
+  transform: translateZ(0);
 }
 
 /* Mobile-first touch optimizations */
@@ -222,7 +231,6 @@
     user-select: none;
   }
 
-  /* Improve button touch response */
   .touch-manipulation {
     touch-action: manipulation;
   }
@@ -232,10 +240,12 @@
     transform: scale(0.98);
   }
 
-  /* Optimize scrolling performance */
   [data-radix-scroll-area-viewport] {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    /* Promote to own layer for smooth scrolling */
+    will-change: scroll-position;
+    transform: translateZ(0);
   }
 }
 
