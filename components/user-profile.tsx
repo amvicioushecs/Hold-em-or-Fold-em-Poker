@@ -87,12 +87,12 @@ export default function UserProfile({ profile, isOwnProfile = true, onClose }: U
       </div>
 
       <ScrollArea className="h-[calc(100vh-56px)] md:h-[calc(100vh-64px)]">
-        <div className="p-3 md:p-4 space-y-3 md:space-y-4 bg-primary">
+        <div className="p-3 md:p-4 space-y-3 md:space-y-4">
           {/* Profile ID */}
-          <p className="text-xs md:text-sm text-secondary">ID: {profile.id}</p>
+          <p className="text-xs md:text-sm text-muted-foreground">ID: {profile.id}</p>
 
           {/* Profile Header Card */}
-          <div className="backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4 bg-slate-400 shadow-md">
+          <div className="bg-card/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 md:gap-4">
               {/* Avatar */}
               <div className="relative flex-shrink-0">
@@ -106,7 +106,7 @@ export default function UserProfile({ profile, isOwnProfile = true, onClose }: U
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-xl">
+                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white text-2xl md:text-3xl font-bold">
                       {profile.name.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -172,7 +172,7 @@ export default function UserProfile({ profile, isOwnProfile = true, onClose }: U
                     value={bioText}
                     onChange={(e) => setBioText(e.target.value)}
                     placeholder="Tell others about yourself..."
-                    className="w-full bg-muted text-foreground text-xs md:text-sm rounded-lg p-2 md:p-3 focus:border-chart-1 focus:outline-none resize-none border-slate-500 border-2 shadow-md"
+                    className="w-full bg-muted text-foreground text-xs md:text-sm rounded-lg p-2 md:p-3 border border-input focus:border-chart-1 focus:outline-none resize-none"
                     rows={3}
                     maxLength={150}
                   />
@@ -218,7 +218,7 @@ export default function UserProfile({ profile, isOwnProfile = true, onClose }: U
             onClick={() => {
               setShowFullStats(true)
             }}
-            className="w-full backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4 hover:bg-card/90 transition-colors cursor-pointer bg-[rgba(144,161,185,1)]"
+            className="w-full bg-card/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4 hover:bg-card/90 transition-colors cursor-pointer"
           >
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <h3 className="text-base md:text-lg font-bold text-foreground">Data</h3>
@@ -243,7 +243,7 @@ export default function UserProfile({ profile, isOwnProfile = true, onClose }: U
           {/* Achievements Section */}
           <button
             onClick={() => setShowAchievements(true)}
-            className="w-full backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4 hover:bg-card/90 transition-colors cursor-pointer bg-[rgba(144,161,185,1)]"
+            className="w-full bg-card/80 backdrop-blur-sm rounded-xl md:rounded-2xl border border-border p-3 md:p-4 hover:bg-card/90 transition-colors cursor-pointer"
           >
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <h3 className="text-base md:text-lg font-bold text-foreground">Achievements</h3>

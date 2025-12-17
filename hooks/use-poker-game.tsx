@@ -34,7 +34,6 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
   const [turnDuration] = useState(30) // 30 seconds per turn
 
   const resetTimer = () => {
-    console.log("[v0] Timer reset")
     setTurnTimeLeft(turnDuration)
   }
 
@@ -47,19 +46,9 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
     dealerSeat = 1,
     gameMode: GameMode = "sng",
   ) => {
-    console.log("[v0] Starting game with:", {
-      playerCount: playerIds.length,
-      playerNames,
-      seatNumbers,
-      smallBlind: sbAmount,
-      bigBlind: bbAmount,
-      dealerSeat,
-      gameMode,
-    })
-
     // Don't start if not enough players
     if (playerIds.length < 2) {
-      console.log("[v0] ERROR: Not enough players to start game")
+      console.log("Not enough players to start game")
       return
     }
 
@@ -68,7 +57,6 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
     resetTimer()
 
     const initialState = initializeGame(playerIds, playerNames, seatNumbers, 1000, dealerSeat, gameMode)
-    console.log("[v0] Game initialized:", initialState)
 
     // Ensure we have valid player indices
     if (!initialState.players[initialState.smallBlindIndex] || !initialState.players[initialState.bigBlindIndex]) {
@@ -102,24 +90,17 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
     initialState.currentPlayerIndex = (initialState.bigBlindIndex + 1) % initialState.players.length
 
     setGameState(initialState)
-    console.log("[v0] Game state set, ready to play")
   }
 
   const makeAction = (playerId: string, action: PlayerAction, amount?: number) => {
-    if (!gameState) {
-      console.log("[v0] ERROR: Cannot make action, no game state")
-      return
-    }
+    if (!gameState) return
 
-    console.log("[v0] Player action:", { playerId, action, amount })
     const newState = processAction(gameState, playerId, action, amount)
-    console.log("[v0] New game state after action:", newState)
     setGameState(newState)
     resetTimer()
 
     // Check if hand is complete and auto-start next hand
     if (newState.phase === "complete") {
-      console.log("[v0] Hand complete, starting next hand in 3 seconds")
       setTimeout(() => {
         nextHand()
       }, 3000) // 3 second delay before next hand
@@ -132,37 +113,29 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
     const currentPlayer = gameState.players[gameState.currentPlayerIndex]
     if (!currentPlayer) return
 
-    console.log("[v0] Time's up for player:", currentPlayer.name)
-
     // Auto-action on timeout
     const currentBet = gameState.currentBet
     const playerBet = currentPlayer.bet
     const amountToCall = currentBet - playerBet
 
     if (amountToCall === 0) {
-      console.log("[v0] Auto-check on timeout")
+      // Auto-check if no bet to call
       makeAction(currentPlayer.id, "check")
     } else {
-      console.log("[v0] Auto-fold on timeout")
+      // Auto-fold if there's a bet to call
       makeAction(currentPlayer.id, "fold")
     }
   }
 
   const nextHand = () => {
-    if (!gameState) {
-      console.log("[v0] ERROR: Cannot start next hand, no game state")
-      return
-    }
+    if (!gameState) return
 
-    console.log("[v0] Starting next hand")
     const newState = startNewHand(gameState, smallBlind, bigBlind)
-    console.log("[v0] Next hand state:", newState)
     setGameState(newState)
     resetTimer()
   }
 
   const resetGame = () => {
-    console.log("[v0] Resetting game")
     setGameState(null)
     resetTimer()
   }

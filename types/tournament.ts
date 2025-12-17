@@ -1,6 +1,4 @@
-export type TournamentPhase = "registration" | "late-registration" | "running" | "break" | "final-table" | "completed"
-
-export type TournamentType = "regular" | "headsup" | "turbo" | "bounty" | "freezeout" | "rebuy" | "pko" | "short-handed"
+export type TournamentPhase = "registration" | "late-registration" | "running" | "final-table" | "completed"
 
 export interface BlindLevel {
   level: number
@@ -8,8 +6,6 @@ export interface BlindLevel {
   bigBlind: number
   ante?: number
   duration: number // in seconds
-  isBreak?: boolean // Mark if this is a break level
-  breakDuration?: number // Duration of break if isBreak is true
 }
 
 export interface TournamentConfig {
@@ -24,11 +20,6 @@ export interface TournamentConfig {
   lateRegistrationMinutes: number
   blindStructure: BlindLevel[]
   prizePoolPercentages: number[] // e.g., [50, 30, 20] for top 3
-  tournamentType: TournamentType
-  bountyAmount?: number // For bounty tournaments
-  breakSchedule?: BreakSchedule[] // Optional break schedule
-  addOnConfig?: AddOnConfig // Optional add-on configuration
-  rebuyConfig?: RebuyConfig // Optional rebuy configuration
 }
 
 export interface TournamentPlayer {
@@ -40,10 +31,6 @@ export interface TournamentPlayer {
   isEliminated: boolean
   eliminationPlace?: number
   prizeWon?: number
-  bountyValue?: number
-  bountiesEarned?: number
-  rebuysUsed?: number // Track rebuy count
-  hasAddOn?: boolean // Track if player purchased add-on
 }
 
 export interface TournamentTable {
@@ -66,10 +53,6 @@ export interface TournamentState {
   currentTime: Date
   totalPlayers: number
   remainingPlayers: number
-  totalBountyPot?: number
-  breakTimeRemaining?: number // Time remaining in current break
-  isAddOnAvailable?: boolean // Whether add-on is currently available
-  isRebuyAvailable?: boolean // Whether rebuy is currently available
 }
 
 export interface TournamentStats {
@@ -80,27 +63,4 @@ export interface TournamentStats {
   biggestPot: number
   prizeWon: number
   eliminatedBy?: string
-}
-
-export interface BreakSchedule {
-  afterLevel: number // Break occurs after this blind level
-  duration: number // Break duration in seconds
-  label: string // e.g., "15-minute break"
-}
-
-export interface AddOnConfig {
-  enabled: boolean
-  availableAtLevel: number // Add-on available after this blind level
-  cost: number
-  chipsReceived: number
-  availableUntilLevel?: number // Optional: add-on expires after this level
-}
-
-export interface RebuyConfig {
-  enabled: boolean
-  maxRebuys: number
-  cost: number
-  chipsReceived: number
-  allowedUntilLevel: number // Rebuy period ends after this level
-  allowedWhenChipsBelow?: number // Can only rebuy when chips below this amount
 }

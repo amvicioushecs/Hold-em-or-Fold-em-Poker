@@ -101,15 +101,6 @@ export default function GiftsPage({ profile, onClose }: GiftsPageProps) {
     return num.toString()
   }
 
-  const formatDate = (date: Date | string | undefined): string => {
-    if (!date) return "Unknown"
-    if (typeof date === "string") return date
-    if (date instanceof Date) {
-      return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-    }
-    return "Unknown"
-  }
-
   return (
     <div className="relative w-full h-[100dvh] bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 overflow-hidden">
       {/* Header */}
@@ -220,7 +211,7 @@ export default function GiftsPage({ profile, onClose }: GiftsPageProps) {
                   <div className="absolute inset-x-0 bottom-0 bg-black/90 backdrop-blur-sm p-2 translate-y-full group-hover:translate-y-0 transition-transform">
                     <p className="text-xs font-bold text-yellow-400 truncate">{gift.name}</p>
                     <p className="text-[10px] text-gray-400 truncate">From: {gift.from}</p>
-                    <p className="text-[10px] text-gray-500">{formatDate(gift.date)}</p>
+                    <p className="text-[10px] text-gray-500">{gift.date}</p>
                   </div>
 
                   {/* Glow effect on hover */}

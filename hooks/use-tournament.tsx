@@ -10,8 +10,6 @@ interface TournamentContextType {
   registerPlayer: (playerId: string, playerName: string) => boolean
   startTournament: () => boolean
   eliminatePlayer: (playerId: string) => void
-  processRebuy: (playerId: string) => boolean // Added rebuy support
-  processAddOn: (playerId: string) => boolean // Added add-on support
   currentBlindLevel: any
   timeUntilNextLevel: string
 }
@@ -25,7 +23,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
 
   // Timer effect for blind levels
   useEffect(() => {
-    if (!tournament || (tournament.phase !== "running" && tournament.phase !== "break")) return
+    if (!tournament || tournament.phase !== "running") return
 
     const interval = setInterval(() => {
       if (tournament.config.id) {
@@ -44,9 +42,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!tournament) return
 
-    const timeRemaining =
-      tournament.phase === "break" ? tournament.breakTimeRemaining || 0 : tournament.blindLevelTimeRemaining
-
+    const timeRemaining = tournament.blindLevelTimeRemaining
     const minutes = Math.floor(timeRemaining / 60)
     const seconds = timeRemaining % 60
     setTimeUntilNextLevel(`${minutes}:${seconds.toString().padStart(2, "0")}`)
@@ -93,30 +89,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const processRebuy = (playerId: string): boolean => {
-    if (!tournament) return false
-    const success = tournamentEngine.processRebuy(tournament.config.id, playerId)
-    if (success) {
-      const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-      if (updatedTournament) {
-        setTournament({ ...updatedTournament })
-      }
-    }
-    return success
-  }
-
-  const processAddOn = (playerId: string): boolean => {
-    if (!tournament) return false
-    const success = tournamentEngine.processAddOn(tournament.config.id, playerId)
-    if (success) {
-      const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-      if (updatedTournament) {
-        setTournament({ ...updatedTournament })
-      }
-    }
-    return success
-  }
-
   return (
     <TournamentContext.Provider
       value={{
@@ -125,8 +97,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         registerPlayer,
         startTournament,
         eliminatePlayer,
-        processRebuy,
-        processAddOn,
         currentBlindLevel,
         timeUntilNextLevel,
       }}

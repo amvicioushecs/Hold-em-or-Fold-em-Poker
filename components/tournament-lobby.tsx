@@ -4,11 +4,11 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle, Zap, Target } from "lucide-react"
+import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { TournamentConfig } from "@/types/tournament"
 import { useTournament } from "@/hooks/use-tournament"
-import { TournamentEngine } from "@/lib/tournament-engine"
+import { tournamentEngine } from "@/lib/tournament-engine"
 
 interface TournamentLobbyProps {
   onClose: () => void
@@ -21,54 +21,21 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
   const { tournament, createTournament, registerPlayer, startTournament } = useTournament()
 
   useEffect(() => {
+    // Create sample tournaments
     const tournaments: TournamentConfig[] = [
-      // Heads-Up SNG
-      {
-        id: "headsup-1",
-        name: "Heads-Up Showdown",
-        buyIn: 500,
-        entryFee: 50,
-        startingChips: 3000,
-        maxPlayers: 8, // 4 matches simultaneously
-        minPlayers: 2,
-        playersPerTable: 2,
-        lateRegistrationMinutes: 5,
-        blindStructure: TournamentEngine.getHeadsUpBlindStructure(),
-        prizePoolPercentages: [100], // Winner takes all
-        tournamentType: "headsup",
-      },
-      // Turbo SNG
       {
         id: "turbo-1",
-        name: "Turbo Shootout",
+        name: "Turbo Showdown",
         buyIn: 1000,
         entryFee: 100,
         startingChips: 5000,
         maxPlayers: 18,
         minPlayers: 6,
         playersPerTable: 6,
-        lateRegistrationMinutes: 10,
-        blindStructure: TournamentEngine.getTurboBlindStructure(),
-        prizePoolPercentages: [50, 30, 20],
-        tournamentType: "turbo",
-      },
-      // Bounty SNG
-      {
-        id: "bounty-1",
-        name: "Bounty Hunter",
-        buyIn: 2000,
-        entryFee: 200,
-        startingChips: 8000,
-        maxPlayers: 27,
-        minPlayers: 9,
-        playersPerTable: 9,
         lateRegistrationMinutes: 15,
-        blindStructure: TournamentEngine.getDefaultBlindStructure(),
-        prizePoolPercentages: [40, 25, 15, 10, 10],
-        tournamentType: "bounty",
-        bountyAmount: 500, // 500 chips per bounty
+        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
+        prizePoolPercentages: [50, 30, 20],
       },
-      // Regular Tournament
       {
         id: "regular-1",
         name: "Regular Tournament",
@@ -79,9 +46,21 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
         minPlayers: 9,
         playersPerTable: 6,
         lateRegistrationMinutes: 30,
-        blindStructure: TournamentEngine.getDefaultBlindStructure(),
+        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
         prizePoolPercentages: [40, 25, 15, 10, 10],
-        tournamentType: "regular",
+      },
+      {
+        id: "high-roller-1",
+        name: "High Roller",
+        buyIn: 50000,
+        entryFee: 5000,
+        startingChips: 50000,
+        maxPlayers: 27,
+        minPlayers: 9,
+        playersPerTable: 9,
+        lateRegistrationMinutes: 45,
+        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
+        prizePoolPercentages: [50, 30, 20],
       },
     ]
 
@@ -180,16 +159,6 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
                 <span className="text-yellow-400 font-bold text-xl">{formatNumber(tournament.totalPrizePool)}</span>
               </div>
 
-              {tournament.config.tournamentType === "bounty" && tournament.totalBountyPot && (
-                <div className="flex items-center justify-between mb-4 bg-orange-500/20 rounded-lg p-3 border border-orange-500/50">
-                  <span className="text-orange-200 font-semibold flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Total Bounty Pot:
-                  </span>
-                  <span className="text-orange-400 font-bold text-xl">{formatNumber(tournament.totalBountyPot)}</span>
-                </div>
-              )}
-
               {/* Start Button */}
               {tournament.registeredPlayers.length >= tournament.config.minPlayers && (
                 <Button
@@ -229,27 +198,12 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-1">{config.name}</h3>
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="text-xs">
                           {config.blindStructure[0].duration / 60} min levels
                         </Badge>
-                        {config.tournamentType === "turbo" && (
-                          <Badge className="bg-orange-500 text-white text-xs flex items-center gap-1">
-                            <Zap className="w-3 h-3" />
-                            TURBO
-                          </Badge>
-                        )}
-                        {config.tournamentType === "headsup" && (
-                          <Badge className="bg-red-500 text-white text-xs flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            HEADS-UP
-                          </Badge>
-                        )}
-                        {config.tournamentType === "bounty" && (
-                          <Badge className="bg-green-500 text-white text-xs flex items-center gap-1">
-                            <Target className="w-3 h-3" />
-                            BOUNTY
-                          </Badge>
+                        {config.id.includes("turbo") && (
+                          <Badge className="bg-orange-500 text-white text-xs">TURBO</Badge>
                         )}
                       </div>
                     </div>
@@ -292,18 +246,6 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
                       <p className="text-lg font-bold text-purple-400">{formatTime(config.lateRegistrationMinutes)}</p>
                     </div>
                   </div>
-
-                  {config.tournamentType === "bounty" && config.bountyAmount && (
-                    <div className="mb-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg p-3 border border-orange-500/50">
-                      <div className="flex items-center justify-between">
-                        <span className="text-orange-200 text-sm font-semibold flex items-center gap-2">
-                          <Target className="w-4 h-4" />
-                          Bounty per Player:
-                        </span>
-                        <span className="text-orange-400 font-bold">{formatNumber(config.bountyAmount)}</span>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Prize Structure */}
                   <div className="mb-4">

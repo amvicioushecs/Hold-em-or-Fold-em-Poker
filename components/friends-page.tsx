@@ -133,9 +133,8 @@ export default function FriendsPage({ onClose }: FriendsPageProps) {
     return num.toString()
   }
 
-  const getTimeAgo = (date: Date | string): string => {
-    const dateObj = date instanceof Date ? date : new Date(date)
-    const seconds = Math.floor((Date.now() - dateObj.getTime()) / 1000)
+  const getTimeAgo = (date: Date): string => {
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
 
     if (seconds < 60) return "just now"
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`

@@ -47,9 +47,7 @@ export default function LuckyWheel({
 
     const interval = setInterval(() => {
       const now = new Date()
-      const nextSpin =
-        wheelState.nextSpinTime instanceof Date ? wheelState.nextSpinTime : new Date(wheelState.nextSpinTime)
-      const diff = nextSpin.getTime() - now.getTime()
+      const diff = wheelState.nextSpinTime.getTime() - now.getTime()
 
       if (diff <= 0) {
         setWheelState((prev) => ({
