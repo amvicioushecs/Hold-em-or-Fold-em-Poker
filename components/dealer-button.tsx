@@ -8,7 +8,7 @@ interface DealerButtonProps {
 }
 
 export default function DealerButton({ seatNumber, className }: DealerButtonProps) {
-  // Now positioned in a tighter circle closer to center of table
+  // Now positioned in a tighter circle closer to center of tables
   const positionClasses: Record<number, string> = {
     1: "top-[28%] left-1/2 -translate-x-1/2", // Top - closer to table center
     2: "top-[32%] right-[28%]", // Top-right - on table surface

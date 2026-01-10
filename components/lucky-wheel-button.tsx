@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Gift } from "lucide-react"
 import LuckyWheel from "./lucky-wheel"
@@ -22,20 +23,11 @@ export default function LuckyWheelButton({
   onPrizeWon,
 }: LuckyWheelButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const router = useRouter()
 
   return (
     <>
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="relative bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-full shadow-xl"
-        size="lg"
-      >
-        <Gift className="w-5 h-5 mr-2" />
-        Daily Bonus
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs">
-          1
-        </div>
-      </Button>
+      null
 
       <LuckyWheel
         isOpen={isOpen}

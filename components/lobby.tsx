@@ -2,7 +2,7 @@
 
 import { useState as useReactState } from "react"
 import { Button } from "@/components/ui/button"
-import { Trophy, Users, Sparkles, Crown, Coins, Diamond, Star } from "lucide-react"
+import { Trophy, Users, Sparkles, Coins, Diamond, Star } from "lucide-react"
 import Image from "next/image"
 import { useWebRTC } from "@/hooks/use-webrtc"
 import { cn } from "@/lib/utils"
@@ -10,7 +10,6 @@ import TableSelection, { type StakeTable } from "./table-selection"
 import SeatSelection from "./seat-selection"
 import ProfileButton from "./profile-button"
 import Store from "./store"
-import LuckyWheelButton from "./lucky-wheel-button"
 import type { WheelPrize } from "@/types/lucky-wheel"
 
 interface LobbyProps {
@@ -71,14 +70,14 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   }
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="relative w-full h-[100dvh] overflow-hidden bg-gradient-to-b from-background via-background to-background">
       {/* Background with Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
 
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full max-w-7xl mx-auto">
         {/* Header Bar */}
-        <div className="flex items-center justify-between p-3 md:p-4 border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-3 md:p-4 border-b border-border/50 backdrop-blur-sm bg-[rgba(29,30,40,1)]">
           {/* Logo */}
           <div className="flex items-center gap-2 hidden">
             <Image src="/logo.png" alt="Logo" width={40} height={40} className="w-8 h-8 md:w-10 md:h-10" />
@@ -91,33 +90,22 @@ export default function Lobby({ onStartGame }: LobbyProps) {
           {/* User Info */}
           <div className="flex items-center gap-2 md:gap-3">
             {/* Chips */}
-            <div className="flex items-center gap-1.5 bg-slate-800 rounded-full px-2 md:px-3 py-1 md:py-1.5 border border-slate-600">
-              <Coins className="w-4 h-4 text-yellow-400" />
-              <span className="text-white font-bold text-xs md:text-sm">{formatChips(playerChips)}</span>
-            </div>
+            
 
             {/* Diamonds */}
-            <div className="flex items-center gap-1.5 bg-slate-800 rounded-full px-2 md:px-3 py-1 md:py-1.5 border border-slate-600">
-              <Diamond className="w-4 h-4 text-cyan-400" />
-              <span className="text-white font-bold text-xs md:text-sm">{playerDiamonds}</span>
-            </div>
+            
 
             {/* Profile Button */}
             <ProfileButton />
 
             {/* Profile Display */}
-            <div className="hidden md:flex items-center gap-2 bg-slate-800 rounded-full pl-1 pr-3 py-1 border border-slate-600">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                {localPlayer?.name.charAt(0).toUpperCase() || "P"}
-              </div>
-              <span className="text-white font-semibold text-sm">{localPlayer?.name || "Player"}</span>
-            </div>
+            
 
             {/* Store Button */}
             <Button
               size="sm"
               onClick={() => setShowStore(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+              className="hover:bg-chart-1/90 bg-blue-600 mx-[-15px] px-0 py-0 border-[3px] border-slate-300 text-white shadow-md"
             >
               <Sparkles className="w-4 h-4 mr-1.5" />
               <span className="text-xs md:text-sm">Store</span>
@@ -126,7 +114,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto bg-[rgba(5,5,10,1)]">
           {/* Logo - Front and Center */}
           <div className="flex justify-center mb-4 md:mb-6">
             <Image
@@ -143,7 +131,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
           {/* Play Button */}
           <Button
             onClick={() => handleGameModeClick("sng")}
-            className="w-full max-w-xs h-14 md:h-16 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-xl md:text-2xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all mb-2 bg-slate-800 border-slate-500 border text-chart-4"
+            className="w-full max-w-xs h-14 md:h-16 hover:bg-chart-4/90 text-xl md:text-2xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all mb-2 bg-slate-600 border-2 shadow-lg opacity-100 border-slate-300 text-[rgba(7,6,4,1)]"
           >
             Play Now
           </Button>
@@ -155,15 +143,15 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               onClick={() => handleGameModeClick("sng")}
               className={cn(
-                "h-20 md:h-24 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-purple-400/50",
-                selectedGameMode === "sng" && "ring-2 md:ring-4 ring-yellow-400",
+                "h-20 md:h-24 bg-chart-1/20 hover:bg-chart-1/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-1/50",
+                selectedGameMode === "sng" && "ring-2 md:ring-4 ring-chart-4",
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               <div className="relative z-10">
-                <Trophy className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-white" />
-                <h3 className="text-xl md:text-3xl font-bold text-white drop-shadow-lg mb-0.5 md:mb-1">SNG</h3>
-                <span className="inline-block bg-green-500 text-white text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
+                <Trophy className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-1" />
+                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">SNG</h3>
+                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
                   OPEN
                 </span>
               </div>
@@ -173,15 +161,15 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               onClick={() => handleGameModeClick("mtt")}
               className={cn(
-                "h-20 md:h-24 bg-gradient-to-br from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-green-400/50",
-                selectedGameMode === "mtt" && "ring-2 md:ring-4 ring-yellow-400",
+                "h-20 md:h-24 bg-chart-5/20 hover:bg-chart-5/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-5/50",
+                selectedGameMode === "mtt" && "ring-2 md:ring-4 ring-chart-4",
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               <div className="relative z-10">
-                <Users className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-white" />
-                <h3 className="text-xl md:text-3xl font-bold text-white drop-shadow-lg mb-0.5 md:mb-1">MTT</h3>
-                <span className="inline-block bg-green-500 text-white text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
+                <Users className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-5" />
+                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">MTT</h3>
+                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
                   OPEN
                 </span>
               </div>
@@ -191,18 +179,18 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               onClick={() => handleGameModeClick("allin")}
               className={cn(
-                "h-20 md:h-24 bg-gradient-to-br from-yellow-600 to-yellow-800 hover:from-yellow-700 hover:to-yellow-900 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-yellow-400/50",
-                selectedGameMode === "allin" && "ring-2 md:ring-4 ring-yellow-400",
+                "h-20 md:h-24 bg-chart-4/20 hover:bg-chart-4/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-4/50",
+                selectedGameMode === "allin" && "ring-2 md:ring-4 ring-chart-4",
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               <div className="relative z-10">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-white" />
-                <p className="text-[10px] md:text-xs text-yellow-200">Jackpot</p>
-                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-white drop-shadow-lg leading-tight">
+                <Sparkles className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-4" />
+                <p className="text-[10px] md:text-xs text-chart-4/80">Jackpot</p>
+                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-chart-4 drop-shadow-lg leading-tight">
                   ALL IN OR FOLD
                 </h3>
-                <p className="text-[9px] md:text-xs text-yellow-200 mt-0.5">6,984,016.13</p>
+                <p className="text-[9px] md:text-xs text-chart-4/80 mt-0.5">6,984,016.13</p>
               </div>
             </Button>
 
@@ -210,47 +198,21 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               onClick={() => handleGameModeClick("omaha")}
               className={cn(
-                "h-20 md:h-24 bg-gradient-to-br from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-blue-400/50",
-                selectedGameMode === "omaha" && "ring-2 md:ring-4 ring-yellow-400",
+                "h-20 md:h-24 bg-chart-2/20 hover:bg-chart-2/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-2/50",
+                selectedGameMode === "omaha" && "ring-2 md:ring-4 ring-chart-4",
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
               <div className="relative z-10">
-                <Star className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-white" />
-                <h3 className="text-xl md:text-3xl font-bold text-white drop-shadow-lg mb-0.5 md:mb-1">OMAHA</h3>
+                <Star className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-2" />
+                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">OMAHA</h3>
               </div>
             </Button>
           </div>
         </div>
 
         {/* Bottom Quick Actions */}
-        <div className="border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm p-3 md:p-4">
-          <div className="flex justify-center gap-2 md:gap-3 max-w-4xl mx-auto flex-wrap">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-slate-800/80 border-slate-600 text-white hover:bg-slate-700"
-            >
-              <Crown className="w-4 h-4 mr-1.5" />
-              <span className="text-xs md:text-sm">VIP</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-slate-800/80 border-slate-600 text-white hover:bg-slate-700"
-            >
-              <Users className="w-4 h-4 mr-1.5" />
-              <span className="text-xs md:text-sm">Friends</span>
-            </Button>
-            <LuckyWheelButton
-              playerName={localPlayer?.name || "Player"}
-              playerLevel={98}
-              playerChips={playerChips}
-              playerDiamonds={playerDiamonds}
-              onPrizeWon={handlePrizeWon}
-            />
-          </div>
-        </div>
+        <div className="border-t border-border/50 backdrop-blur-sm p-3 md:p-4 bg-[rgba(21,22,33,0.91)]"></div>
       </div>
 
       {/* Table Selection Modal */}

@@ -98,23 +98,23 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
   ]
 
   return (
-    <div className="relative w-full h-[100dvh] bg-gradient-to-b from-gray-900 to-black overflow-hidden">
+    <div className="relative w-full h-[100dvh] bg-gradient-to-b from-background to-background/80 overflow-hidden">
       {/* Header */}
-      <div className="relative z-20 bg-black/90 backdrop-blur-sm border-b border-gray-700">
+      <div className="relative z-20 bg-background/90 backdrop-blur-sm border-b border-border">
         <div className="flex items-center justify-between p-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="w-14 h-14 rounded-full border-2 border-white/50 text-white hover:bg-white/10 touch-manipulation"
+            className="w-14 h-14 rounded-full border-2 border-foreground/50 text-foreground hover:bg-foreground/10 touch-manipulation"
           >
             <ArrowLeft className="w-7 h-7" />
           </Button>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Store</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Store</h1>
           <Button
             variant="ghost"
             size="icon"
-            className="w-14 h-14 rounded-full border-2 border-white/50 text-white touch-manipulation"
+            className="w-14 h-14 rounded-full border-2 border-foreground/50 text-foreground touch-manipulation"
           >
             <HelpCircle className="w-7 h-7" />
           </Button>
@@ -123,14 +123,14 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
 
       {/* Tabs */}
       <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="flex-1 flex flex-col">
-        <TabsList className="w-full grid grid-cols-3 p-1 bg-transparent border-b border-gray-700">
+        <TabsList className="w-full grid grid-cols-3 p-1 bg-transparent border-b border-border">
           <TabsTrigger
             value="coins"
             className={cn(
               "text-base md:text-lg font-bold py-4 rounded-lg transition-all touch-manipulation",
               selectedTab === "coins"
-                ? "bg-gray-700 text-white"
-                : "bg-transparent text-gray-400 hover:text-white hover:bg-gray-800",
+                ? "bg-card text-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50",
             )}
           >
             Coins
@@ -140,8 +140,8 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
             className={cn(
               "text-base md:text-lg font-bold py-4 rounded-lg transition-all touch-manipulation",
               selectedTab === "diamonds"
-                ? "bg-gray-700 text-white"
-                : "bg-transparent text-gray-400 hover:text-white hover:bg-gray-800",
+                ? "bg-card text-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50",
             )}
           >
             Diamonds
@@ -151,8 +151,8 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
             className={cn(
               "text-base md:text-lg font-bold py-4 rounded-lg transition-all touch-manipulation",
               selectedTab === "subscription"
-                ? "bg-gray-700 text-white"
-                : "bg-transparent text-gray-400 hover:text-white hover:bg-gray-800",
+                ? "bg-card text-foreground"
+                : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-card/50",
             )}
           >
             Subscription
@@ -164,20 +164,20 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
           <ScrollArea className="h-[calc(100vh-140px)]">
             <div className="p-4 space-y-3">
               {/* Balance Display */}
-              <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-2xl p-3 border-2 border-gray-700 flex items-center justify-between mb-4">
+              <div className="bg-gradient-to-r from-card to-card/80 rounded-2xl p-3 border-2 border-border flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="text-4xl md:text-5xl">💰</div>
-                  <span className="text-2xl md:text-3xl font-bold text-yellow-400">{formatNumber(playerChips)}</span>
+                  <span className="text-2xl md:text-3xl font-bold text-chart-4">{formatNumber(playerChips)}</span>
                 </div>
               </div>
 
-              {/* Piggy Bank - optimized for mobile */}
-              <div className="relative bg-gradient-to-br from-yellow-900/50 to-orange-900/50 rounded-2xl p-3 border-2 border-yellow-600/50 overflow-hidden mb-4">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/10 rounded-full blur-3xl" />
+              {/* Piggy Bank */}
+              <div className="relative bg-gradient-to-br from-chart-4/20 to-chart-5/20 rounded-2xl p-3 border-2 border-chart-4/30 overflow-hidden mb-4">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-chart-4/10 rounded-full blur-3xl" />
                 <div className="relative flex items-center justify-between">
                   <div>
-                    <p className="text-sm md:text-sm text-yellow-300 mb-1">Save up to</p>
-                    <p className="text-lg md:text-xl font-bold text-white">PIGGY BANK</p>
+                    <p className="text-sm md:text-sm text-chart-4/80 mb-1">Save up to</p>
+                    <p className="text-lg md:text-xl font-bold text-foreground">PIGGY BANK</p>
                   </div>
                   <div className="text-5xl md:text-6xl">🐷</div>
                 </div>
@@ -189,28 +189,26 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
                   <div
                     key={pkg.id}
                     className={cn(
-                      "relative bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-2.5 border-2 transition-all active:scale-98",
+                      "relative bg-gradient-to-br from-card to-card/50 rounded-2xl p-2.5 border-2 transition-all active:scale-98",
                       pkg.bestValue
-                        ? "border-yellow-500 ring-2 ring-yellow-400/50"
+                        ? "border-chart-4 ring-2 ring-chart-4/50"
                         : pkg.popular
-                          ? "border-purple-500 ring-2 ring-purple-400/50"
-                          : "border-gray-700",
+                          ? "border-chart-2 ring-2 ring-chart-2/50"
+                          : "border-border",
                     )}
                   >
-                    {/* Badge positioning for mobile */}
                     {pkg.bestValue && (
                       <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10">
-                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 px-3 py-1.5 text-xs font-bold">
+                        <Badge className="bg-chart-4 text-primary border-0 px-3 py-1.5 text-xs font-bold">
                           <Crown className="w-3 h-3 mr-1" />
                           BEST VALUE
                         </Badge>
                       </div>
                     )}
 
-                    {/* Popular Badge */}
                     {pkg.popular && (
                       <div className="absolute -top-2 -right-2 z-10">
-                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1">
+                        <Badge className="bg-chart-2 text-primary border-0 px-3 py-1">
                           <Sparkles className="w-3 h-3 mr-1" />
                           POPULAR
                         </Badge>
@@ -218,38 +216,35 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
                     )}
 
                     <div className="flex items-center gap-3 pt-2">
-                      {/* Larger coin icon for mobile */}
                       <div className="relative w-16 h-16 md:w-18 md:h-18 flex-shrink-0">
-                        <div className="absolute inset-0 bg-yellow-400/20 rounded-full blur-xl" />
+                        <div className="absolute inset-0 bg-chart-4/20 rounded-full blur-xl" />
                         <div className="relative text-5xl md:text-5xl flex items-center justify-center">
                           {index === 0 ? "💰" : index === 1 ? "🪙" : index === 2 ? "💵" : "🟡"}
                         </div>
                       </div>
 
-                      {/* Package Info with better mobile spacing */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-2 mb-1">
-                          <span className="text-sm md:text-base text-gray-300 line-through">
+                          <span className="text-sm md:text-base text-muted-foreground line-through">
                             {formatNumber(pkg.baseAmount)}
                           </span>
                           {pkg.bonusPercentage > 0 && (
-                            <span className="text-sm font-bold text-orange-400">+{pkg.bonusPercentage}%</span>
+                            <span className="text-sm font-bold text-chart-5">+{pkg.bonusPercentage}%</span>
                           )}
                         </div>
-                        <p className="text-xl md:text-2xl font-bold text-cyan-400 mb-2">
+                        <p className="text-xl md:text-2xl font-bold text-chart-2 mb-2">
                           {formatNumber(pkg.totalAmount)}
                         </p>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] md:text-xs font-bold text-cyan-400">Bonus</span>
+                          <span className="text-[10px] md:text-xs font-bold text-chart-2">Bonus</span>
                           <span className="text-base md:text-lg">🎫</span>
-                          <span className="text-[10px] md:text-xs font-bold text-white">x{pkg.bonusTickets}</span>
+                          <span className="text-[10px] md:text-xs font-bold text-foreground">x{pkg.bonusTickets}</span>
                         </div>
                       </div>
 
-                      {/* Larger touch-friendly button */}
                       <Button
                         size="lg"
-                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-base md:text-lg px-4 md:px-5 py-5 md:py-5 rounded-2xl shadow-lg touch-manipulation min-w-[80px]"
+                        className="bg-chart-2 hover:bg-chart-2/90 text-primary font-bold text-base md:text-lg px-4 md:px-5 py-5 md:py-5 rounded-2xl shadow-lg touch-manipulation min-w-[80px]"
                       >
                         ${pkg.price.toFixed(2)}
                       </Button>
@@ -258,7 +253,6 @@ export default function Store({ onClose, playerChips, playerDiamonds }: StorePro
                 ))}
               </div>
 
-              {/* Bottom Padding for safe area */}
               <div className="h-16" />
             </div>
           </ScrollArea>
