@@ -172,26 +172,36 @@ export default function PokerTable() {
 
   return (
     <div className="relative w-full h-[100dvh] bg-background overflow-hidden">
-      {/* Menu Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsMenuOpen(true)}
-        className="absolute top-2 left-2 z-50 backdrop-blur-sm rounded-lg border md:top-4 md:left-4 w-9 h-9 md:w-10 md:h-10 shadow-xl bg-card text-foreground border-border"
-      >
-        <Menu className="w-5 h-5 md:w-6 md:h-6 text-foreground" />
-      </Button>
+      {/* Top Info Bar */}
+      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
+        {/* Menu Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMenuOpen(true)}
+          className="rounded-full w-10 h-10 hover:bg-card/50"
+        >
+          <Menu className="w-5 h-5 md:w-6 md:h-6 text-foreground" />
+        </Button>
 
-      {/* Table Info */}
-      {selectedTable && (
-        <div className="absolute top-14 left-2 md:top-16 md:left-4 z-40 bg-card/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-border">
-          <p className="text-xs text-muted-foreground">Table: {selectedTable.name}</p>
-          <p className="text-xs text-chart-4 font-bold">
-            Blinds: ${selectedTable.smallBlind.toLocaleString()}/{selectedTable.bigBlind.toLocaleString()}
-          </p>
-          {isAllInOrFoldMode && <p className="text-xs text-destructive font-bold mt-1">⚡ ALL IN OR FOLD</p>}
-        </div>
-      )}
+        {/* Table Info - Center */}
+        {selectedTable && (
+          <div className="flex flex-col items-center">
+            <h2 className="text-sm md:text-base font-bold text-foreground flex items-center gap-2">
+              {selectedTable.name}
+              {isAllInOrFoldMode && <span className="text-xs text-destructive font-black px-1.5 py-0.5 bg-destructive/10 rounded">AOF</span>}
+            </h2>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="font-medium text-chart-4">${selectedTable.smallBlind}/${selectedTable.bigBlind}</span>
+              <span>•</span>
+              <span>Pot: <span className="text-chart-4 font-bold">${gameState?.pot || 0}</span></span>
+            </div>
+          </div>
+        )}
+
+        {/* Right Side - Chat Toggle or Empty for balance */}
+        <div className="w-10" />
+      </div>
 
       {/* Game Menu */}
       <GameMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
@@ -205,9 +215,9 @@ export default function PokerTable() {
       </div>
 
       {/* Main Container */}
-      <div className="relative w-full h-full flex items-center justify-center p-2 pb-24 md:p-4 md:pb-28 bg-background">
+      <div className="relative w-full h-full flex items-center justify-center p-0 pb-20 md:pb-24 bg-background">
         {/* Poker Table */}
-        <div className="relative w-full max-w-5xl h-full max-h-[calc(100vh-8rem)] md:max-h-none md:aspect-[4/3]">
+        <div className="relative w-full max-w-6xl h-full md:aspect-[16/9] flex items-center justify-center">
           {/* Player Positions */}
           {playerIds.map((playerId, index) => {
             if (index >= positions.length) return null
@@ -218,10 +228,9 @@ export default function PokerTable() {
           {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={false} />}
 
           {/* Table Surface */}
-          <div className="absolute inset-0 flex items-center justify-center bg-background">
-            <div className="relative w-[85%] h-[90%] md:w-[70%] md:h-[85%] bg-gradient-to-br from-emerald-900 via-emerald-950 to-emerald-900 rounded-[50%] shadow-2xl flex items-center justify-center">
-              {/* Table Border */}
-              <div className="absolute inset-0 rounded-[50%] border-4 md:border-8 border-chart-4/50 shadow-xl"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-[95%] h-[60%] md:w-[80%] md:h-[75%] bg-[#0f3a28] rounded-[100px] md:rounded-[200px] shadow-2xl flex items-center justify-center border-[12px] md:border-[20px] border-[#1a1c24] ring-1 ring-white/5">
+
 
               {/* Blind Info Display */}
               {gameState && selectedTable && (
@@ -258,12 +267,7 @@ export default function PokerTable() {
                 </div>
               )}
 
-              {/* Pot Display */}
-              {gameState && gameState.pot > 0 && (
-                <div className="absolute top-[35%] md:top-[40%] left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm px-4 py-2 rounded-full border-2 border-chart-4">
-                  <p className="text-sm md:text-base font-bold text-chart-4">Pot: ${gameState.pot}</p>
-                </div>
-              )}
+
 
               {/* Waiting for Players */}
               {!gameState && players.size < 2 && (

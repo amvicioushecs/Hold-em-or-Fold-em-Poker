@@ -8,7 +8,7 @@ import GiftSender from "./gift-sender"
 interface GiftButtonProps {
   recipientId?: string
   playerChips: number
-  variant?: "default" | "ghost" | "outline"
+  variant?: "default" | "ghost" | "outline" | "secondary" | "destructive"
   size?: "default" | "sm" | "lg" | "icon"
   className?: string
 }

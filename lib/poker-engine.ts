@@ -375,6 +375,7 @@ export function initializeGame(
   startingChips = 1000,
   dealerSeat = 1,
   gameMode: GameMode = "sng",
+  timestamp: number = Date.now(),
 ): GameState {
   deckManager.reset()
   const cardsPerPlayer = gameMode === "omaha" ? 4 : 2
@@ -417,12 +418,12 @@ export function initializeGame(
     handNumber: 1,
     gameMode,
     blindLevel: 1,
-    lastBlindIncreaseTime: Date.now(),
+    lastBlindIncreaseTime: timestamp,
   }
 }
 
 // Start new hand with rotated dealer
-export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number): GameState {
+export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number, timestamp: number = Date.now()): GameState {
   deckManager.reset()
 
   // Reset player states
@@ -466,7 +467,7 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
 
   if (currentState.gameMode === "sng" || currentState.gameMode === "mtt") {
     // Check if enough time has passed since last increase
-    const now = Date.now()
+    const now = timestamp
     if (now - lastIncreaseTime > BLIND_INTERVAL_MS) {
       newBlindLevel++
       lastIncreaseTime = now
