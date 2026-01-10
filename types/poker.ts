@@ -27,7 +27,7 @@ export interface HandEvaluation {
 
 export type PlayerAction = "fold" | "check" | "call" | "raise" | "all-in"
 export type GamePhase = "waiting" | "pre-flop" | "flop" | "turn" | "river" | "showdown" | "complete"
-export type GameMode = "sng" | "mtt" | "allin" | "omaha"
+export type GameMode = "cash" | "sng" | "mtt" | "allin" | "omaha"
 
 export interface PlayerState {
   id: string
@@ -57,4 +57,6 @@ export interface GameState {
   winners: string[]
   handNumber: number // NEW: Track hand count
   gameMode: GameMode // NEW: Track which poker variant is being played
+  blindLevel?: number // NEW: Track blind level for SNG/MTT
+  lastBlindIncreaseTime?: number // NEW: Track time of last blind increase
 }
