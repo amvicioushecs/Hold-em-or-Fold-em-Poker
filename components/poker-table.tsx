@@ -289,12 +289,16 @@ export default function PokerTable() {
                     duration={turnDuration}
                     className="scale-110 md:scale-125"
                   />
-                  
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-          )}
-
+      {/* Action Buttons - Fixed at Bottom */}
+      <div className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t border-border z-40 pb-safe">
+        <div className="flex justify-center gap-2 md:gap-4 p-3 md:p-4 max-w-lg mx-auto">
           <Button
             variant="outline"
             size="lg"
