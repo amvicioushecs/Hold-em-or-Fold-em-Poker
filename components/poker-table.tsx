@@ -293,12 +293,6 @@ export default function PokerTable() {
                 </div>
               )}
 
-              {/* Game Phase Display */}
-              {gameState && gameState.phase !== "waiting" && (
-                
-                className="w-12 h-12 rounded-full shadow-xl"
-              />
-            </div>
           )}
 
           <Button
