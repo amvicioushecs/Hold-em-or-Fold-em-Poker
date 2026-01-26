@@ -11,7 +11,12 @@ interface TurnTimerProps {
   className?: string
 }
 
-export default function TurnTimer({ isActive, onTimeUp, duration = 30, className }: TurnTimerProps) {
+export default function TurnTimer({
+  isActive,
+  onTimeUp,
+  duration = 30,
+  className,
+}: TurnTimerProps) {
   const [timeLeft, setTimeLeft] = useState(duration)
   const [isPulsing, setIsPulsing] = useState(false)
 
