@@ -50,7 +50,7 @@ export default function VideoPlayer({
 
       {/* Status Indicators */}
       <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between">
-       
+        <div className="bg-black/60 backdrop-blur-sm px-1.5 py-0.5 md:px-2 md:py-1 rounded text-[10px] md:text-xs text-white font-medium truncate max-w-[70%]">
           {name}
         </div>
         <div className="flex gap-1">

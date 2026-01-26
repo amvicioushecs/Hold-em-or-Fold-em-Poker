@@ -49,15 +49,7 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
   }, [])
 
   const mappedGameMode: GameMode =
-    gameMode === "sng"
-      ? "sng"
-      : gameMode === "mtt"
-        ? "mtt"
-        : gameMode === "allin"
-          ? "allin"
-          : gameMode === "cash"
-            ? "cash"
-            : "omaha"
+    gameMode === "sng" ? "sng" : gameMode === "mtt" ? "mtt" : gameMode === "allin" ? "allin" : "omaha"
 
   // Define different stake tables based on game mode
   const tables: StakeTable[] = [
@@ -403,14 +395,7 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
                 <span className="truncate">
                   {isMobile
                     ? "Select Table"
-                    : `Select Your Table - ${gameMode === "sng"
-                      ? "SNG"
-                      : gameMode === "allin"
-                        ? "ALL IN OR FOLD"
-                        : gameMode === "cash"
-                          ? "CASH GAME"
-                          : "OMAHA"
-                    }`}
+                    : `Select Your Table - ${gameMode === "sng" ? "SNG" : gameMode === "allin" ? "ALL IN OR FOLD" : "OMAHA"}`}
                 </span>
               </DialogTitle>
               <div className="flex items-center gap-2 mt-2 text-xs md:text-sm text-muted-foreground">

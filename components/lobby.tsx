@@ -90,16 +90,16 @@ export default function Lobby({ onStartGame }: LobbyProps) {
           {/* User Info */}
           <div className="flex items-center gap-2 md:gap-3">
             {/* Chips */}
-
+            
 
             {/* Diamonds */}
-
+            
 
             {/* Profile Button */}
             <ProfileButton />
 
             {/* Profile Display */}
-
+            
 
             {/* Store Button */}
             <Button
@@ -130,7 +130,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
 
           {/* Play Button */}
           <Button
-            onClick={() => handleGameModeClick("cash")}
+            onClick={() => handleGameModeClick("sng")}
             className="w-full max-w-xs h-14 md:h-16 hover:bg-chart-4/90 text-xl md:text-2xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all mb-2 bg-slate-600 border-2 shadow-lg opacity-100 border-slate-300 text-[rgba(7,6,4,1)]"
           >
             Play Now

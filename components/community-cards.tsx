@@ -10,7 +10,7 @@ export default function CommunityCards() {
   const slots = Array.from({ length: 5 }, (_, i) => gameState?.communityCards[i] || null)
 
   return (
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1 md:gap-2">
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-1 md:gap-2 mt-4 md:mt-8">
       {slots.map((card, index) => (
         <Card key={index} card={card || undefined} faceDown={!card} animate={!!card} delay={index * 200} size="md" />
       ))}

@@ -48,15 +48,11 @@ export function createDeck(): Card[] {
 }
 
 // Deal cards to players using DeckManager
-export function dealCards(
-  deck: Card[],
-  numPlayers: number,
-  cardsPerPlayer = 2,
-): { playerCards: Card[][]; remainingDeck: Card[] } {
+export function dealCards(deck: Card[], numPlayers: number): { playerCards: Card[][]; remainingDeck: Card[] } {
   const playerCards: Card[][] = Array.from({ length: numPlayers }, () => [])
 
-  // Deal cards to each player
-  for (let i = 0; i < cardsPerPlayer; i++) {
+  // Deal 2 cards to each player
+  for (let i = 0; i < 2; i++) {
     for (let j = 0; j < numPlayers; j++) {
       const card = deckManager.drawOne()
       if (card) {
@@ -316,11 +312,7 @@ function getQuadValue(rankCounts: Record<string, number>): number {
 }
 
 // Determine winners
-export function determineWinners(
-  players: PlayerState[],
-  communityCards: Card[],
-  gameState: GameState,
-): string[] {
+export function determineWinners(players: PlayerState[], communityCards: Card[]): string[] {
   const activePlayers = players.filter((p) => !p.folded)
 
   if (activePlayers.length === 1) {
@@ -329,42 +321,11 @@ export function determineWinners(
 
   const evaluations = activePlayers.map((player) => ({
     playerId: player.id,
-    evaluation:
-      gameState.gameMode === "omaha"
-        ? evaluateOmahaHand(player.cards, communityCards)
-        : evaluateHand([...player.cards, ...communityCards]),
+    evaluation: evaluateHand([...player.cards, ...communityCards]),
   }))
 
   const maxValue = Math.max(...evaluations.map((e) => e.evaluation.value))
   return evaluations.filter((e) => e.evaluation.value === maxValue).map((e) => e.playerId)
-}
-
-function evaluateOmahaHand(holeCards: Card[], communityCards: Card[]): HandEvaluation {
-  if (holeCards.length !== 4) {
-    // Fallback or error handling
-    if (holeCards.length < 2) throw new Error("Omaha requires at least 2 hole cards")
-  }
-  if (communityCards.length < 3) {
-    throw new Error("Omaha requires at least 3 community cards to evaluate")
-  }
-
-  // Omaha rule: Must use exactly 2 hole cards and exactly 3 community cards
-  const holeCombinations = getCombinations(holeCards, 2)
-  const boardCombinations = getCombinations(communityCards, 3)
-
-  let bestHand: HandEvaluation | null = null
-
-  for (const holeCombo of holeCombinations) {
-    for (const boardCombo of boardCombinations) {
-      const fiveCardHand = [...holeCombo, ...boardCombo]
-      const evaluation = evaluateFiveCards(fiveCardHand)
-      if (!bestHand || evaluation.value > bestHand.value) {
-        bestHand = evaluation
-      }
-    }
-  }
-
-  return bestHand!
 }
 
 // Initialize game state
@@ -375,11 +336,9 @@ export function initializeGame(
   startingChips = 1000,
   dealerSeat = 1,
   gameMode: GameMode = "sng",
-  timestamp: number = Date.now(),
 ): GameState {
   deckManager.reset()
-  const cardsPerPlayer = gameMode === "omaha" ? 4 : 2
-  const { playerCards } = dealCards([], playerIds.length, cardsPerPlayer)
+  const { playerCards } = dealCards([], playerIds.length)
 
   const players: PlayerState[] = playerIds.map((id, index) => ({
     id,
@@ -416,21 +375,19 @@ export function initializeGame(
     deck: [],
     winners: [],
     handNumber: 1,
-    gameMode,
-    blindLevel: 1,
-    lastBlindIncreaseTime: timestamp,
+    gameMode, // Store game mode in state
   }
 }
 
 // Start new hand with rotated dealer
-export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number, timestamp: number = Date.now()): GameState {
+export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number): GameState {
   deckManager.reset()
 
   // Reset player states
   const players = currentState.players.map((p) => ({
     ...p,
     bet: 0,
-    cards: [] as Card[],
+    cards: [],
     folded: false,
     allIn: false,
     lastAction: undefined,
@@ -449,42 +406,17 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
   const bigBlindIndex = (newDealerIndex + 2) % players.length
 
   // Deal new cards
-  const cardsPerPlayer = currentState.gameMode === "omaha" ? 4 : 2
-  const { playerCards } = dealCards([], players.length, cardsPerPlayer)
+  const { playerCards } = dealCards([], players.length)
   players.forEach((player, index) => {
     player.cards = playerCards[index]
   })
-
-  // Calculate Blinds based on Mode
-  let currentSmallBlind = smallBlind
-  let currentBigBlind = bigBlind
-  let newBlindLevel = currentState.blindLevel || 1
-  let lastIncreaseTime = currentState.lastBlindIncreaseTime || Date.now()
-
-  // Increase blinds for SNG/MTT based on TIME (e.g., every 5 minutes)
-  // For demo/testing, using a short interval (e.g. 1 minute or 10 seconds checking relative to hand start)
-  const BLIND_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes standard
-
-  if (currentState.gameMode === "sng" || currentState.gameMode === "mtt") {
-    // Check if enough time has passed since last increase
-    const now = timestamp
-    if (now - lastIncreaseTime > BLIND_INTERVAL_MS) {
-      newBlindLevel++
-      lastIncreaseTime = now
-    }
-
-    // Apply multiplier based on level
-    const multiplier = Math.pow(1.5, newBlindLevel - 1)
-    currentSmallBlind = Math.floor(smallBlind * multiplier)
-    currentBigBlind = Math.floor(bigBlind * multiplier)
-  }
 
   // Post blinds
   const smallBlindPlayer = players[smallBlindIndex]
   const bigBlindPlayer = players[bigBlindIndex]
 
-  const smallBlindAmount = Math.min(currentSmallBlind, smallBlindPlayer.chips)
-  const bigBlindAmount = Math.min(currentBigBlind, bigBlindPlayer.chips)
+  const smallBlindAmount = Math.min(smallBlind, smallBlindPlayer.chips)
+  const bigBlindAmount = Math.min(bigBlind, bigBlindPlayer.chips)
 
   smallBlindPlayer.chips -= smallBlindAmount
   smallBlindPlayer.bet = smallBlindAmount
@@ -514,8 +446,6 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
     winners: [],
     handNumber: currentState.handNumber + 1,
     gameMode: currentState.gameMode, // Preserve game mode across hands
-    blindLevel: newBlindLevel,
-    lastBlindIncreaseTime: lastIncreaseTime,
   }
 }
 
@@ -644,7 +574,7 @@ function advancePhase(gameState: GameState): GameState {
 
     case "river":
       newState.phase = "showdown"
-      newState.winners = determineWinners(newState.players, newState.communityCards, newState)
+      newState.winners = determineWinners(newState.players, newState.communityCards)
       break
 
     case "showdown":

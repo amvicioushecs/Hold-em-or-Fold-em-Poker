@@ -48,12 +48,12 @@ export default function PlayerPosition({ playerId, position, showCards = false }
   const isPlayerTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === playerId
 
   const positionClasses: Record<string, string> = {
-    top: "top-[-20px] left-1/2 -translate-x-1/2 md:top-4",
-    "top-left": "top-10 -left-2 md:top-16 md:left-4",
-    "top-right": "top-10 -right-2 md:top-16 md:right-4",
-    "bottom-left": "bottom-32 -left-2 md:bottom-32 md:left-4",
-    "bottom-right": "bottom-32 -right-2 md:bottom-32 md:right-4",
-    bottom: "bottom-4 left-1/2 -translate-x-1/2 md:bottom-4",
+    top: "top-1 left-1/2 -translate-x-1/2 md:top-4",
+    "top-left": "top-8 left-1 md:top-16 md:left-4",
+    "top-right": "top-8 right-1 md:top-16 md:right-4",
+    "bottom-left": "bottom-20 left-1 md:bottom-32 md:left-4",
+    "bottom-right": "bottom-20 right-1 md:bottom-32 md:right-4",
+    bottom: "bottom-14 left-1/2 -translate-x-1/2 md:bottom-4",
   }
 
   return (
@@ -70,7 +70,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         />
 
         {/* Video Feed */}
-        <div className="relative w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 shadow-md md:shadow-lg border border-border md:border-2 rounded-full overflow-hidden bg-black/50">
+        <div className="relative w-20 h-20 md:w-32 md:h-32 lg:w-40 lg:h-40 shadow-md md:shadow-lg border border-border md:border-2 rounded-md md:rounded-lg overflow-hidden">
           {/* Active Turn Glow */}
           {isPlayerTurn && (
             <div className="absolute inset-0 rounded-md md:rounded-lg ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" />
@@ -90,7 +90,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
           {/* Player Cards */}
           {showCards && playerCards.length > 0 && (
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1 scale-75 md:scale-90 origin-top">
+            <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1">
               {playerCards.map((card, index) => (
                 <Card key={index} card={card} faceDown={!player.isLocal} animate={true} delay={index * 150} size="sm" />
               ))}
@@ -109,12 +109,13 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         )}
       </div>
 
-      {/* Player Info (Chips only - Name removed) */}
-      <div className="mt-1 md:mt-2 text-center backdrop-blur-sm rounded-full px-2 py-0.5 md:px-3 md:py-1 max-w-[80px] md:max-w-none mx-auto bg-black/60 border border-white/10 shadow-sm">
+      {/* Player Info */}
+      <div className="mt-1 md:mt-2 text-center backdrop-blur-sm rounded px-1.5 py-0.5 md:px-2 md:py-1 md:shadow max-w-[80px] md:max-w-none mx-auto text-slate-50 shadow-none bg-black border-solid border opacity-100 border-slate-700">
+        <p className="text-[10px] md:text-xs font-semibold truncate text-card-foreground">{player.name}</p>
         <div className="flex items-center justify-center gap-1">
-          <p className="text-[10px] md:text-xs text-white font-bold tracking-tight">${playerState?.chips || 0}</p>
+          <p className="text-[9px] md:text-xs text-muted-foreground">${playerState?.chips || 0}</p>
           {playerState && playerState.bet > 0 && (
-            <span className="text-[9px] md:text-[11px] text-amber-400 font-bold">(${playerState.bet})</span>
+            <span className="text-[8px] md:text-[10px] text-amber-400 font-bold">(${playerState.bet})</span>
           )}
         </div>
       </div>

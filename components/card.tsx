@@ -19,7 +19,7 @@ export default function Card({
   faceDown = false,
   animate = false,
   delay = 0,
-  size = "sm",
+  size = "md",
   className,
 }: CardProps) {
   const [isRevealed, setIsRevealed] = useState(!animate)
@@ -107,13 +107,13 @@ export default function Card({
 
             {/* Center Symbol */}
             <div className="flex-1 flex items-center justify-center">
-              
+              <span className="text-2xl md:text-4xl lg:text-5xl">{symbol}</span>
             </div>
 
             {/* Bottom Corner (rotated) */}
             <div className="flex flex-col items-center leading-none rotate-180">
               <span className="font-bold text-xs md:text-sm lg:text-base">{card.rank}</span>
-              
+              <span className="text-base md:text-xl lg:text-2xl">{symbol}</span>
             </div>
           </>
         ) : (
