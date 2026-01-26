@@ -19,7 +19,7 @@ export default function Card({
   faceDown = false,
   animate = false,
   delay = 0,
-  size = "md",
+  size = "sm",
   className,
 }: CardProps) {
   const [isRevealed, setIsRevealed] = useState(!animate)

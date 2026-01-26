@@ -26,9 +26,7 @@ export default function BlindInfo({ smallBlind, bigBlind, handNumber }: BlindInf
           </div>
         </div>
       </div>
-      <div className="bg-black/60 backdrop-blur-sm rounded px-2 py-0.5 border border-amber-500/30">
-        <span className="text-[10px] md:text-xs text-amber-400 font-semibold">Hand #{handNumber}</span>
-      </div>
+      
     </div>
   )
 }

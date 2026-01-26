@@ -295,9 +295,7 @@ export default function PokerTable() {
 
               {/* Game Phase Display */}
               {gameState && gameState.phase !== "waiting" && (
-                <div className="absolute top-[20%] right-[15%] md:top-[25%] md:right-[20%] bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-chart-4">
-                  <p className="text-[10px] md:text-xs font-bold text-chart-4 uppercase">{gameState.phase}</p>
-                </div>
+                
               )}
 
              
