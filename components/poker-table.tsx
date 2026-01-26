@@ -289,9 +289,7 @@ export default function PokerTable() {
                     duration={turnDuration}
                     className="scale-110 md:scale-125"
                   />
-                  <div className="bg-chart-4 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-chart-4/80 animate-pulse">
-                    <p className="text-xs md:text-sm font-bold text-background">YOUR TURN</p>
-                  </div>
+                  
                 </div>
               )}
 
