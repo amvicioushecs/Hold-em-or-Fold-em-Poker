@@ -80,9 +80,7 @@ export default function TurnTimer({ isActive, onTimeUp, duration = 30, className
       {/* Warning Text */}
       {isLowTime && (
         <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <p className={cn("text-xs font-bold animate-pulse", isCriticalTime ? "text-red-500" : "text-orange-500")}>
-            {isCriticalTime ? "Time's Up!" : "Hurry!"}
-          </p>
+          
         </div>
       )}
     </div>
