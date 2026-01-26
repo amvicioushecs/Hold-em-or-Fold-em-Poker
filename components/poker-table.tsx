@@ -296,26 +296,6 @@ export default function PokerTable() {
               {/* Game Phase Display */}
               {gameState && gameState.phase !== "waiting" && (
                 
-              )}
-
-             
-                
-            
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons - Mobile First */}
-      <div className="absolute bottom-2 left-0 right-0 px-2 z-40 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:px-0">
-        <div className="flex gap-2 md:gap-4 justify-center">
-          {/* Gift Button - Mobile and Desktop */}
-          {gameState && localPlayerState && (
-            <div className="absolute bottom-28 md:bottom-36 left-4 z-40">
-              <GiftButton
-                playerChips={localPlayerChips}
-                variant="secondary"
-                size="icon"
                 className="w-12 h-12 rounded-full shadow-xl"
               />
             </div>
