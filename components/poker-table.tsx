@@ -304,11 +304,7 @@ export default function PokerTable() {
 
               {/* Player Chips Display */}
               {localPlayerState && (
-                <div className="absolute bottom-[22%] md:bottom-[26%] left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-sm px-4 py-1.5 rounded-full border border-chart-4">
-                  <p className="text-xs md:text-sm font-bold text-chart-4">
-                    Chips: ${localPlayerChips}
-                  </p>
-                </div>
+                
               )}
             </div>
           </div>
