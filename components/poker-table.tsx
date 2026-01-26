@@ -302,10 +302,9 @@ export default function PokerTable() {
                 </div>
               )}
 
-              {/* Player Chips Display */}
-              {localPlayerState && (
+             
                 
-              )}
+            
             </div>
           </div>
         </div>
