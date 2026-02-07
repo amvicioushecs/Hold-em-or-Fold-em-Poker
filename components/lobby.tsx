@@ -122,6 +122,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
               alt="Hold'em or Fold'em Poker Logo"
               width={200}
               height={200}
+              priority
               className="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 drop-shadow-2xl animate-pulse"
             />
           </div>

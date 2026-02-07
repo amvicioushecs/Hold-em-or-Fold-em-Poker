@@ -248,6 +248,7 @@ export default function PokerTable() {
                   alt="Hold'em or Fold'em Poker"
                   width={150}
                   height={150}
+                  priority
                   className="md:w-32 md:h-32 lg:w-36 lg:h-36 my-[75px] py-0 px-0 h-[108px] w-[108px] border-0 border-transparent border-none shadow-none opacity-25"
                 />
               </div>
