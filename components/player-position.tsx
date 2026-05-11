@@ -4,10 +4,8 @@ import { useState, useEffect } from "react"
 import { useWebRTC } from "@/hooks/use-webrtc"
 import { useChat } from "@/hooks/use-chat"
 import { usePokerGame } from "@/hooks/use-poker-game"
-import VideoPlayer from "./video-player"
-import ChatBubble from "./chat-bubble"
+import { Play } from "lucide-react"
 import Card from "./card"
-import BlindMarker from "./blind-marker"
 import PlayerTurnIndicator from "./player-turn-indicator"
 
 interface PlayerPositionProps {
@@ -36,88 +34,131 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
   if (!player) return null
 
-  // Get player's cards from game state
+  // Get player's state from game
   const playerState = gameState?.players.find((p) => p.id === playerId)
   const playerCards = playerState?.cards || []
-
-  // Check if this player is small blind or big blind
-  const isSmallBlind = gameState && gameState.players[gameState.smallBlindIndex]?.id === playerId
-  const isBigBlind = gameState && gameState.players[gameState.bigBlindIndex]?.id === playerId
-
-  // Check if it's this player's turn
   const isPlayerTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === playerId
+  const isDealer = gameState && gameState.players[gameState.dealerIndex]?.id === playerId
+  const isLocalPlayer = playerId === "local"
 
+  // Position mappings for 6 players around the table
   const positionClasses: Record<string, string> = {
-    top: "top-[-20px] left-1/2 -translate-x-1/2 md:top-4",
-    "top-left": "top-10 -left-2 md:top-16 md:left-4",
-    "top-right": "top-10 -right-2 md:top-16 md:right-4",
-    "bottom-left": "bottom-32 -left-2 md:bottom-32 md:left-4",
-    "bottom-right": "bottom-32 -right-2 md:bottom-32 md:right-4",
-    bottom: "bottom-4 left-1/2 -translate-x-1/2 md:bottom-4",
+    "top": "top-[8%] left-1/2 -translate-x-1/2",
+    "top-left": "top-[25%] left-[5%]",
+    "top-right": "top-[25%] right-[5%]",
+    "bottom-left": "bottom-[28%] left-[5%]",
+    "bottom-right": "bottom-[28%] right-[5%]",
+    "bottom": "bottom-[5%] left-1/2 -translate-x-1/2",
   }
 
+  // Get last action text
+  const getStatusText = () => {
+    if (playerState?.folded) return "Folded"
+    if (playerState?.allIn) return "All-In"
+    if (playerState?.lastAction === "check") return "Checked"
+    if (playerState?.lastAction === "call") return "Called"
+    if (playerState?.lastAction === "raise") return "Raised"
+    return null
+  }
+
+  const statusText = getStatusText()
+
   return (
-    <div
-      className={`absolute bg-sidebar-border shadow-xl text-transparent border-0 rounded-4xl ${positionClasses[position]} z-30`}
-    >
-      <div className="relative">
-        {/* Turn Timer Indicator */}
+    <div className={`absolute ${positionClasses[position]} z-30 flex flex-col items-center`}>
+      {/* Turn Timer (only show when it's this player's turn) */}
+      {isPlayerTurn && !isLocalPlayer && (
         <PlayerTurnIndicator
           position={position}
-          isActive={isPlayerTurn || false}
+          isActive={true}
           onTimeUp={handleTimeUp}
           duration={turnDuration}
         />
+      )}
 
-        {/* Video Feed */}
-        <div className="relative w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 shadow-md md:shadow-lg border border-border md:border-2 rounded-full overflow-hidden bg-black/50">
-          {/* Active Turn Glow */}
-          {isPlayerTurn && (
-            <div className="absolute inset-0 rounded-md md:rounded-lg ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" />
+      {/* Player Card Container */}
+      <div 
+        className={`
+          relative flex flex-col items-center rounded-xl overflow-hidden
+          ${isLocalPlayer ? 'w-24 md:w-32' : 'w-20 md:w-28'}
+          ${isPlayerTurn ? 'ring-2 ring-primary gold-glow' : ''}
+          ${isLocalPlayer ? 'border-2 border-primary bg-gradient-to-b from-primary/20 to-primary/5' : 'player-card border border-border/50'}
+        `}
+      >
+        {/* Avatar/Video Area */}
+        <div className={`
+          relative w-full aspect-[4/3] flex items-center justify-center
+          ${playerState?.folded ? 'opacity-40' : ''}
+          bg-gradient-to-br from-slate-600/50 to-slate-800/50
+        `}>
+          {/* Play button icon (placeholder for video) */}
+          <div className="w-10 h-10 md:w-14 md:h-14 rounded-lg bg-gradient-to-br from-slate-500/60 to-slate-700/60 flex items-center justify-center border border-slate-400/30">
+            <Play className="w-5 h-5 md:w-7 md:h-7 text-slate-300 fill-slate-300" />
+          </div>
+
+          {/* Dealer Button */}
+          {isDealer && (
+            <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white text-black text-[10px] font-bold flex items-center justify-center shadow-md">
+              D
+            </div>
           )}
 
-          <VideoPlayer
-            stream={player.stream}
-            name={player.name}
-            isLocal={player.isLocal}
-            videoEnabled={player.videoEnabled}
-            audioEnabled={player.audioEnabled}
-          />
-
-          {/* Blind Markers */}
-          {isSmallBlind && <BlindMarker type="SB" />}
-          {isBigBlind && <BlindMarker type="BB" />}
-
-          {/* Player Cards */}
-          {showCards && playerCards.length > 0 && (
-            <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-0.5 md:gap-1 scale-75 md:scale-90 origin-top">
+          {/* Player Cards (shown above the avatar for opponents) */}
+          {showCards && playerCards.length > 0 && !isLocalPlayer && (
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5 scale-75 origin-bottom">
               {playerCards.map((card, index) => (
-                <Card key={index} card={card} faceDown={!player.isLocal} animate={true} delay={index * 150} size="sm" />
+                <Card 
+                  key={index} 
+                  card={card} 
+                  faceDown={!playerState?.folded && gameState?.phase !== "showdown"} 
+                  animate={true} 
+                  delay={index * 150} 
+                  size="sm" 
+                />
               ))}
             </div>
           )}
         </div>
 
-        {/* Chat Bubble */}
-        {lastMessage && (
-          <ChatBubble
-            key={lastMessage.timestamp}
-            message={lastMessage.message}
-            playerName={player.name}
-            position={position as any}
-          />
-        )}
-      </div>
-
-      {/* Player Info (Chips only - Name removed) */}
-      <div className="mt-1 md:mt-2 text-center backdrop-blur-sm rounded-full px-2 py-0.5 md:px-3 md:py-1 max-w-[80px] md:max-w-none mx-auto bg-black/60 border border-white/10 shadow-sm">
-        <div className="flex items-center justify-center gap-1">
-          <p className="text-[10px] md:text-xs text-white font-bold tracking-tight">${playerState?.chips || 0}</p>
-          {playerState && playerState.bet > 0 && (
-            <span className="text-[9px] md:text-[11px] text-amber-400 font-bold">(${playerState.bet})</span>
-          )}
+        {/* Player Info */}
+        <div className={`
+          w-full px-2 py-1.5 text-center
+          ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
+        `}>
+          {/* Player Name */}
+          <p className={`
+            text-xs md:text-sm font-semibold truncate
+            ${isLocalPlayer ? 'text-primary' : 'text-white'}
+          `}>
+            {player.name}{isLocalPlayer ? " (You)" : ""}
+          </p>
+          
+          {/* Chips */}
+          <p className={`
+            text-[10px] md:text-xs font-bold
+            ${isLocalPlayer ? 'text-primary' : 'text-emerald-400'}
+          `}>
+            ${playerState?.chips?.toLocaleString() || "0"}
+          </p>
         </div>
       </div>
+
+      {/* Bet Badge (positioned below the card) */}
+      {playerState && playerState.bet > 0 && (
+        <div className="mt-1.5 bet-badge px-2 py-0.5 rounded-full">
+          <span className="text-[10px] md:text-xs text-white font-semibold">
+            Bet: ${playerState.bet.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      {/* Status Badge (Checked, Folded, etc.) */}
+      {statusText && playerState?.bet === 0 && (
+        <div className="mt-1.5 px-2 py-0.5 rounded-full bg-black/60 border border-border/50">
+          <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
+            {statusText}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

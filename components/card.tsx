@@ -45,9 +45,9 @@ export default function Card({
   }, [animate, delay, faceDown])
 
   const sizeClasses = {
-    sm: "w-8 h-11 text-sm",
-    md: "w-12 h-16 text-lg",
-    lg: "w-16 h-22 text-2xl",
+    sm: "w-7 h-10 text-xs",
+    md: "w-10 h-14 text-sm md:w-12 md:h-16 md:text-base",
+    lg: "w-14 h-20 text-lg md:w-16 md:h-22",
   }
 
   const color = card ? getCardColor(card.suit) : "black"
@@ -56,9 +56,9 @@ export default function Card({
   return (
     <div
       className={cn(
-        "relative rounded-lg shadow-lg border-2 transition-all duration-300",
+        "relative rounded-lg shadow-lg transition-all duration-300",
         sizeClasses[size],
-        isDealing && "translate-y-[-50px] opacity-0",
+        isDealing && "translate-y-[-30px] opacity-0",
         !isDealing && "translate-y-0 opacity-100",
         className,
       )}
@@ -70,19 +70,18 @@ export default function Card({
     >
       {/* Card Back */}
       <div
-        className="absolute inset-0 rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 border-2 border-blue-900 flex items-center justify-center"
+        className="absolute inset-0 rounded-lg bg-gradient-to-br from-slate-600 to-slate-800 border border-slate-500 flex items-center justify-center overflow-hidden"
         style={{
           backfaceVisibility: "hidden",
           transform: "rotateY(180deg)",
         }}
       >
-        <div className="w-full h-full p-1 flex items-center justify-center">
-          <div className="w-full h-full border-2 border-blue-400 rounded bg-blue-700/30 flex items-center justify-center">
-            <div className="grid grid-cols-3 gap-0.5">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="w-1 h-1 md:w-1.5 md:h-1.5 bg-blue-300 rounded-full" />
-              ))}
-            </div>
+        {/* Grid pattern */}
+        <div className="absolute inset-1 rounded border border-slate-500/50 bg-slate-700/30">
+          <div className="w-full h-full grid grid-cols-4 grid-rows-5 gap-px opacity-40">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div key={i} className="bg-slate-500/30" />
+            ))}
           </div>
         </div>
       </div>
@@ -90,7 +89,7 @@ export default function Card({
       {/* Card Face */}
       <div
         className={cn(
-          "absolute inset-0 rounded-lg bg-white border-gray-300 flex flex-col p-1 md:p-2",
+          "absolute inset-0 rounded-lg bg-white border border-gray-200 flex flex-col overflow-hidden shadow-inner",
           color === "red" ? "text-red-600" : "text-gray-900",
         )}
         style={{
@@ -99,25 +98,30 @@ export default function Card({
       >
         {card ? (
           <>
-            {/* Top Corner */}
-            <div className="flex flex-col items-center leading-none">
-              <span className="font-bold text-xs md:text-sm lg:text-base">{card.rank}</span>
-              <span className="text-base md:text-xl lg:text-2xl">{symbol}</span>
+            {/* Top left corner */}
+            <div className="absolute top-0.5 left-1 flex flex-col items-center leading-none">
+              <span className="font-bold text-[0.65rem] md:text-xs">{card.rank}</span>
+              <span className="text-[0.6rem] md:text-sm -mt-0.5">{symbol}</span>
             </div>
 
             {/* Center Symbol */}
             <div className="flex-1 flex items-center justify-center">
-              <span className="text-2xl md:text-4xl lg:text-5xl">{symbol}</span>
+              <span className={cn(
+                "font-bold",
+                size === "sm" ? "text-lg" : size === "md" ? "text-2xl md:text-3xl" : "text-4xl md:text-5xl"
+              )}>
+                {symbol}
+              </span>
             </div>
 
-            {/* Bottom Corner (rotated) */}
-            <div className="flex flex-col items-center leading-none rotate-180">
-              <span className="font-bold text-xs md:text-sm lg:text-base">{card.rank}</span>
-              <span className="text-base md:text-xl lg:text-2xl">{symbol}</span>
+            {/* Bottom right corner (rotated) */}
+            <div className="absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180">
+              <span className="font-bold text-[0.65rem] md:text-xs">{card.rank}</span>
+              <span className="text-[0.6rem] md:text-sm -mt-0.5">{symbol}</span>
             </div>
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">?</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-300 text-xl">?</div>
         )}
       </div>
     </div>

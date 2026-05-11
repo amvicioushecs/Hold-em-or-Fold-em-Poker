@@ -31,7 +31,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -48,38 +48,50 @@
   --shadow-blur: 4px;
   --shadow-spread: 0px;
   --shadow-opacity: 0.4;
-  --background: oklch(0.145 0 0);
+  /* Navy blue background matching design */
+  --background: oklch(0.18 0.03 260);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
+  /* Darker card background */
+  --card: oklch(0.22 0.035 260);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
+  --popover: oklch(0.20 0.03 260);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  /* Gold primary color */
+  --primary: oklch(0.78 0.16 85);
+  --primary-foreground: oklch(0.18 0.03 260);
+  /* Secondary for muted elements */
+  --secondary: oklch(0.30 0.04 260);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --muted: oklch(0.28 0.03 260);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.78 0.16 85);
+  --accent-foreground: oklch(0.18 0.03 260);
+  /* Red for fold/destructive */
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.35 0.04 260);
+  --input: oklch(0.25 0.035 260);
+  --ring: oklch(0.78 0.16 85);
+  /* Gold accent for chart-4 */
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-4: oklch(0.78 0.16 85);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.20 0.03 260);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: oklch(0.78 0.16 85);
+  --sidebar-primary-foreground: oklch(0.18 0.03 260);
+  --sidebar-accent: oklch(0.30 0.04 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-border: oklch(0.35 0.04 260);
+  --sidebar-ring: oklch(0.78 0.16 85);
+  
+  /* Custom poker table colors */
+  --table-felt: oklch(0.35 0.12 155);
+  --table-border: oklch(0.25 0.04 260);
+  --gold-accent: oklch(0.78 0.16 85);
+  --gold-accent-dark: oklch(0.65 0.14 85);
 }
 
 @theme inline {
@@ -204,6 +216,32 @@
 /* Pot display glow */
 .pot-glow {
   box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+}
+
+/* Poker table felt gradient */
+.poker-felt {
+  background: linear-gradient(180deg, #1a5c3d 0%, #0f3a28 50%, #0a2a1c 100%);
+}
+
+/* Gold border glow for active player */
+.gold-glow {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 0 0 30px rgba(212, 175, 55, 0.3);
+}
+
+/* Bet badge style */
+.bet-badge {
+  background: linear-gradient(135deg, #1a5c3d 0%, #0f3a28 100%);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+}
+
+/* Player card with gradient border */
+.player-card {
+  background: linear-gradient(180deg, rgba(100, 100, 120, 0.3) 0%, rgba(60, 60, 80, 0.5) 100%);
+}
+
+.player-card-active {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border-color: rgba(212, 175, 55, 0.8);
 }
 
 /* Mobile-first touch optimizations */
