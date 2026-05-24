@@ -96,7 +96,9 @@ export default function Lobby({ onStartGame }: LobbyProps) {
 
 
             {/* Profile Button */}
-            <ProfileButton />
+            <div className="bg-black border border-[#434a52] rounded-[22px] size-9">
+              <ProfileButton />
+            </div>
 
             {/* Profile Display */}
 
@@ -105,7 +107,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               size="sm"
               onClick={() => setShowStore(true)}
-              className="font-geist hover:bg-chart-1/90 bg-blue-600 ml-[927px] px-0 py-0 border-[3px] border-slate-300 text-white shadow-[inset_0_2px_4px_0_rgb(0_0_0_/_0.05)] rounded-md -mt-[2px] tracking-wide"
+              className="font-geist hover:bg-chart-1/90 bg-black px-0 py-0 border border-[#3a4146] text-[#f7d71c] shadow-[-1px_-1px_5px_0px_rgba(239,192,13,0.50)] rounded-md -mt-[2px] tracking-[0.089em] leading-none"
             >
               <Sparkles className="w-4 h-4 mr-1.5" />
               <span className="text-xs md:text-sm">Store</span>
@@ -114,7 +116,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto bg-[rgba(5,5,10,1)]">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto bg-[rgba(5,5,10,1)] border-[#616d75]">
           {/* Logo - Front and Center */}
           <div className="flex justify-center mb-4 md:mb-6">
             <Image

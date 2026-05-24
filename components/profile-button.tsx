@@ -131,7 +131,7 @@ export default function ProfileButton() {
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(true)}
-        className="text-white hover:bg-white/10 rounded-full"
+        className="text-[#e6b00a] hover:bg-white/10 rounded-full font-bold text-xl w-9 h-9"
       >
         <User className="w-5 h-5" />
       </Button>
