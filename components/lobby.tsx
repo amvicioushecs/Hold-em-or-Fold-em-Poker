@@ -77,7 +77,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
       {/* Content Container */}
       <div className="relative z-10 flex flex-col h-full max-w-7xl mx-auto">
         {/* Header Bar */}
-        <div className="flex items-center justify-between p-3 md:p-4 border-b border-border/50 backdrop-blur-sm bg-[rgba(29,30,40,1)]">
+        <div className="flex items-center justify-between pt-[10px] pb-[5px] pl-[23px] pr-3 md:pr-4 border-b border-border/50 backdrop-blur-sm bg-[rgba(29,30,40,1)]">
           {/* Logo */}
           <div className="flex items-center gap-2 hidden">
             <Image src="/logo.png" alt="Logo" width={40} height={40} className="w-8 h-8 md:w-10 md:h-10" />
@@ -124,7 +124,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
               alt="Hold'em or Fold'em Poker Logo"
               width={200}
               height={200}
-              className="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 drop-shadow-2xl animate-pulse"
+              className="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 drop-shadow-2xl animate-pulse text-2xl"
             />
           </div>
 
@@ -153,9 +153,6 @@ export default function Lobby({ onStartGame }: LobbyProps) {
               <div className="relative z-10">
                 <Trophy className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-1" />
                 <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">SNG</h3>
-                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
-                  OPEN
-                </span>
               </div>
             </Button>
 
@@ -171,9 +168,6 @@ export default function Lobby({ onStartGame }: LobbyProps) {
               <div className="relative z-10">
                 <Users className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-5" />
                 <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">MTT</h3>
-                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
-                  OPEN
-                </span>
               </div>
             </Button>
 
