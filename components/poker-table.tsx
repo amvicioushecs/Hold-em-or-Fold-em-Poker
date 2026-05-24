@@ -262,13 +262,13 @@ export default function PokerTable() {
         )}
 
         {/* Quick Bet Buttons */}
-        <div className="flex gap-2 justify-center">
+        <div className="flex gap-3 justify-center px-2">
           <Button
             variant="outline"
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(0.5)}
-            className="flex-1 max-w-[80px] h-9 text-xs font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             1/2 Pot
           </Button>
@@ -277,7 +277,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(0.75)}
-            className="flex-1 max-w-[80px] h-9 text-xs font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             3/4 Pot
           </Button>
@@ -286,7 +286,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(1)}
-            className="flex-1 max-w-[80px] h-9 text-xs font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             Pot
           </Button>
@@ -295,7 +295,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn}
             onClick={() => handleQuickBet("all-in")}
-            className="flex-1 max-w-[80px] h-9 text-xs font-bold rounded-full bg-primary text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[10px] font-bold rounded-full bg-primary text-primary-foreground"
           >
             All-In
           </Button>
