@@ -15,12 +15,31 @@ export default function CommunityCards() {
         <div 
           key={index}
           className="relative"
+          style={{
+            animation: card ? `dealCard 0.6s ease-out ${index * 150}ms forwards` : "none",
+            opacity: card ? 1 : 0.3,
+          }}
         >
+          <style>{`
+            @keyframes dealCard {
+              0% {
+                opacity: 0;
+                transform: translateX(-120px) translateY(80px) scale(0.6) rotateZ(25deg);
+              }
+              50% {
+                transform: translateX(-40px) translateY(40px) scale(0.85) rotateZ(15deg);
+              }
+              100% {
+                opacity: 1;
+                transform: translateX(0) translateY(0) scale(1) rotateZ(0deg);
+              }
+            }
+          `}</style>
           <Card 
             card={card || undefined} 
             faceDown={!card} 
             animate={!!card} 
-            delay={index * 200} 
+            delay={index * 150} 
             size="md" 
           />
         </div>
