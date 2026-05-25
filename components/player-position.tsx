@@ -77,17 +77,18 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       {/* Player Card Container */}
       <div 
         className={`
-          relative flex flex-col items-center rounded-xl overflow-hidden
-          ${isLocalPlayer ? 'w-24 md:w-32' : 'w-20 md:w-28'}
-          ${isPlayerTurn ? 'ring-2 ring-primary gold-glow' : ''}
-          ${isLocalPlayer ? 'border-2 border-primary bg-gradient-to-b from-primary/20 to-primary/5' : 'player-card border border-border/50'}
+          relative flex flex-col items-center overflow-hidden
+          ${position === 'top' ? 'rounded-3xl border-4 border-primary w-32 md:w-48 ml-[1px]' : 'rounded-xl'}
+          ${position !== 'top' && (isLocalPlayer ? 'w-24 md:w-32' : 'w-20 md:w-28')}
+          ${isPlayerTurn && position !== 'top' ? 'ring-2 ring-primary gold-glow' : ''}
+          ${isLocalPlayer && position !== 'top' ? 'border-2 border-primary bg-gradient-to-b from-primary/20 to-primary/5' : position !== 'top' ? 'player-card border border-border/50' : 'bg-slate-700'}
         `}
       >
         {/* Avatar/Video Area */}
         <div className={`
-          relative w-full aspect-[4/3] flex items-center justify-center
-          ${playerState?.folded ? 'opacity-40' : ''}
-          bg-gradient-to-br from-slate-600/50 to-slate-800/50
+          relative w-full ${position === 'top' ? 'aspect-video' : 'aspect-[4/3]'} flex items-center justify-center
+          ${playerState?.folded && position !== 'top' ? 'opacity-40' : ''}
+          ${position === 'top' ? 'bg-gradient-to-br from-slate-500 to-slate-700' : 'bg-gradient-to-br from-slate-600/50 to-slate-800/50'}
         `}>
 
 
@@ -98,9 +99,9 @@ export default function PlayerPosition({ playerId, position, showCards = false }
             </div>
           )}
 
-          {/* Player Cards (shown above the avatar for opponents) */}
-          {showCards && playerCards.length > 0 && !isLocalPlayer && (
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5 scale-75 origin-bottom">
+          {/* Player Cards (shown below video screen) */}
+          {showCards && playerCards.length > 0 && !isLocalPlayer && position === 'top' && (
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-1.5 origin-top">
               {playerCards.map((card, index) => (
                 <Card 
                   key={index} 
@@ -108,7 +109,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
                   faceDown={!playerState?.folded && gameState?.phase !== "showdown"} 
                   animate={true} 
                   delay={index * 150} 
-                  size="sm" 
+                  size="md" 
                 />
               ))}
             </div>
@@ -116,10 +117,10 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         </div>
 
         {/* Player Info */}
+        {position !== 'top' && (
         <div className={`
           w-full px-2 py-1.5 text-center
           ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
-          ${position === 'top' ? 'py-0 px-3.5 bg-[rgba(210,194,194,0)]' : ''}
           ${position === 'bottom' ? 'py-0 pr-[73px] bg-gradient-to-b from-primary/10 to-transparent' : ''}
         `}>
           {/* Player Name */}
@@ -142,10 +143,10 @@ export default function PlayerPosition({ playerId, position, showCards = false }
             ${playerState?.chips?.toLocaleString() || "0"}
           </p>
         </div>
-      </div>
+        )}
 
       {/* Bet Badge (positioned below the card) */}
-      {playerState && playerState.bet > 0 && position !== 'bottom' && (
+      {playerState && playerState.bet > 0 && position !== 'bottom' && position !== 'top' && (
         <div className="mt-1.5 bet-badge px-2 py-0.5 rounded-full">
           <span className="text-[10px] md:text-xs text-white font-semibold">
             Bet: ${playerState.bet.toLocaleString()}
@@ -154,7 +155,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       )}
 
       {/* Status Badge (Checked, Folded, etc.) */}
-      {statusText && playerState?.bet === 0 && (
+      {statusText && playerState?.bet === 0 && position !== 'top' && (
         <div className="mt-1.5 px-2 py-0.5 rounded-full bg-black/60 border border-border/50">
           <span className="text-[10px] md:text-xs text-muted-foreground font-medium">
             {statusText}
