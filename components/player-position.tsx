@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useWebRTC } from "@/hooks/use-webrtc"
 import { useChat } from "@/hooks/use-chat"
 import { usePokerGame } from "@/hooks/use-poker-game"
-import { Play } from "lucide-react"
 import Card from "./card"
 import PlayerTurnIndicator from "./player-turn-indicator"
 
@@ -90,10 +89,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
           ${playerState?.folded ? 'opacity-40' : ''}
           bg-gradient-to-br from-slate-600/50 to-slate-800/50
         `}>
-          {/* Play button icon (placeholder for video) */}
-          <div className="w-10 h-10 md:w-14 md:h-14 rounded-lg bg-gradient-to-br from-slate-500/60 to-slate-700/60 flex items-center justify-center border border-slate-400/30">
-            <Play className="w-5 h-5 md:w-7 md:h-7 text-slate-300 fill-slate-300" />
-          </div>
+
 
           {/* Dealer Button */}
           {isDealer && (
@@ -123,11 +119,15 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         <div className={`
           w-full px-2 py-1.5 text-center
           ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
+          ${position === 'top' ? 'py-0 px-3.5 bg-transparent border-[rgba(139,148,155,0.11)]' : ''}
+          ${position === 'bottom' ? 'py-0 pr-[73px] bg-gradient-to-b from-primary/10 to-transparent' : ''}
         `}>
           {/* Player Name */}
           <p className={`
             text-xs md:text-sm font-semibold truncate
             ${isLocalPlayer ? 'text-primary' : 'text-white'}
+            ${position === 'top' ? 'text-transparent' : ''}
+            ${position === 'bottom' ? 'text-transparent' : ''}
           `}>
             {player.name}{isLocalPlayer ? " (You)" : ""}
           </p>
@@ -136,6 +136,8 @@ export default function PlayerPosition({ playerId, position, showCards = false }
           <p className={`
             text-[10px] md:text-xs font-bold
             ${isLocalPlayer ? 'text-primary' : 'text-emerald-400'}
+            ${position === 'top' ? 'text-transparent' : ''}
+            ${position === 'bottom' ? 'text-[rgba(0,0,0,0.02)]' : ''}
           `}>
             ${playerState?.chips?.toLocaleString() || "0"}
           </p>
@@ -143,7 +145,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       </div>
 
       {/* Bet Badge (positioned below the card) */}
-      {playerState && playerState.bet > 0 && (
+      {playerState && playerState.bet > 0 && position !== 'bottom' && (
         <div className="mt-1.5 bet-badge px-2 py-0.5 rounded-full">
           <span className="text-[10px] md:text-xs text-white font-semibold">
             Bet: ${playerState.bet.toLocaleString()}

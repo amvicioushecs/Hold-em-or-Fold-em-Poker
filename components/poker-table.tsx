@@ -199,9 +199,9 @@ export default function PokerTable() {
             
             {/* Total Pot Display */}
             <div className="absolute top-[38%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-              <div className="bg-card/90 backdrop-blur-sm px-6 py-3 rounded-xl border border-border/50 shadow-lg">
-                <p className="text-xs text-muted-foreground text-center uppercase tracking-wider">Total Pot</p>
-                <p className="text-2xl md:text-3xl font-bold text-primary text-center">
+              <div className="bg-card/90 backdrop-blur-sm px-0 py-0 rounded-xl border border-border/50 shadow-lg text-[8px]">
+                <p className="text-[6px] text-white text-center uppercase tracking-wider font-black">Total Pot</p>
+                <p className="text-xs font-bold text-white text-center bg-[rgba(255,255,255,0.02)]">
                   ${pot.toLocaleString()}.00
                 </p>
               </div>
@@ -268,7 +268,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(0.5)}
-            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[8px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             1/2 Pot
           </Button>
@@ -277,7 +277,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(0.75)}
-            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[8px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             3/4 Pot
           </Button>
@@ -286,7 +286,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn || !canRaise}
             onClick={() => handleQuickBet(1)}
-            className="flex-1 max-w-[90px] h-10 text-[10px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[8px] font-semibold rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
           >
             Pot
           </Button>
@@ -295,7 +295,7 @@ export default function PokerTable() {
             size="sm"
             disabled={!isLocalPlayerTurn}
             onClick={() => handleQuickBet("all-in")}
-            className="flex-1 max-w-[90px] h-10 text-[10px] font-bold rounded-full bg-primary text-primary-foreground"
+            className="flex-1 max-w-[90px] h-10 text-[8px] font-bold rounded-full bg-primary text-primary-foreground"
           >
             All-In
           </Button>
