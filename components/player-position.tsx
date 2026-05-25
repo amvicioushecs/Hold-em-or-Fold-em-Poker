@@ -118,32 +118,33 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
         {/* Player Info */}
         {position !== 'top' && (
-        <div className={`
-          w-full px-2 py-1.5 text-center
-          ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
-          ${position === 'bottom' ? 'py-0 pr-[73px] bg-gradient-to-b from-primary/10 to-transparent' : ''}
-        `}>
-          {/* Player Name */}
-          <p className={`
-            text-xs md:text-sm font-semibold truncate
-            ${isLocalPlayer ? 'text-primary' : 'text-white'}
-            ${position === 'top' ? 'text-[rgba(255,255,255,0)]' : ''}
-            ${position === 'bottom' ? 'text-transparent' : ''}
+          <div className={`
+            w-full px-2 py-1.5 text-center
+            ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
+            ${position === 'bottom' ? 'py-0 pr-[73px] bg-gradient-to-b from-primary/10 to-transparent' : ''}
           `}>
-            {player.name}{isLocalPlayer ? " (You)" : ""}
-          </p>
-          
-          {/* Chips */}
-          <p className={`
-            text-[10px] md:text-xs font-bold
-            ${isLocalPlayer ? 'text-primary' : 'text-emerald-400'}
-            ${position === 'top' ? 'text-[rgba(0,0,0,0)]' : ''}
-            ${position === 'bottom' ? 'text-[rgba(0,0,0,0.02)]' : ''}
-          `}>
-            ${playerState?.chips?.toLocaleString() || "0"}
-          </p>
-        </div>
+            {/* Player Name */}
+            <p className={`
+              text-xs md:text-sm font-semibold truncate
+              ${isLocalPlayer ? 'text-primary' : 'text-white'}
+              ${position === 'top' ? 'text-[rgba(255,255,255,0)]' : ''}
+              ${position === 'bottom' ? 'text-transparent' : ''}
+            `}>
+              {player.name}{isLocalPlayer ? " (You)" : ""}
+            </p>
+            
+            {/* Chips */}
+            <p className={`
+              text-[10px] md:text-xs font-bold
+              ${isLocalPlayer ? 'text-primary' : 'text-emerald-400'}
+              ${position === 'top' ? 'text-[rgba(0,0,0,0)]' : ''}
+              ${position === 'bottom' ? 'text-[rgba(0,0,0,0.02)]' : ''}
+            `}>
+              ${playerState?.chips?.toLocaleString() || "0"}
+            </p>
+          </div>
         )}
+      </div>
 
       {/* Bet Badge (positioned below the card) */}
       {playerState && playerState.bet > 0 && position !== 'bottom' && position !== 'top' && (
