@@ -161,7 +161,7 @@ export default function PokerTable() {
           variant="ghost"
           size="icon"
           onClick={() => setShowLobby(true)}
-          className="w-10 h-10 rounded-full text-foreground hover:bg-card"
+          className="w-10 h-10 rounded-full text-foreground hover:bg-card text-[8px]"
         >
           <ArrowLeft className="w-5 h-5" />
         </Button>
@@ -170,7 +170,7 @@ export default function PokerTable() {
           <Button
             variant="ghost"
             size="icon"
-            className="w-10 h-10 rounded-full text-foreground hover:bg-card"
+            className="w-10 h-10 rounded-full text-foreground hover:bg-card text-[8px]"
           >
             <Video className="w-5 h-5" />
           </Button>
@@ -178,7 +178,7 @@ export default function PokerTable() {
             variant="ghost"
             size="icon"
             onClick={() => setIsMenuOpen(true)}
-            className="w-10 h-10 rounded-full text-foreground hover:bg-card"
+            className="w-10 h-10 rounded-full text-foreground hover:bg-card text-[8px]"
           >
             <Settings className="w-5 h-5" />
           </Button>

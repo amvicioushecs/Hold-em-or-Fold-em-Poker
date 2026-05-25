@@ -42,7 +42,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
   // Position mappings for 6 players around the table
   const positionClasses: Record<string, string> = {
-    "top": "top-[8%] left-1/2 -translate-x-1/2",
+    "top": "bottom-[5%] left-0",
     "top-left": "top-[25%] left-[5%]",
     "top-right": "top-[25%] right-[5%]",
     "bottom-left": "bottom-[28%] left-[5%]",
@@ -119,14 +119,14 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         <div className={`
           w-full px-2 py-1.5 text-center
           ${isLocalPlayer ? 'bg-gradient-to-b from-primary/10 to-transparent' : 'bg-black/40'}
-          ${position === 'top' ? 'py-0 px-3.5 bg-transparent border-[rgba(139,148,155,0.11)]' : ''}
+          ${position === 'top' ? 'py-0 px-3.5 bg-[rgba(210,194,194,0)]' : ''}
           ${position === 'bottom' ? 'py-0 pr-[73px] bg-gradient-to-b from-primary/10 to-transparent' : ''}
         `}>
           {/* Player Name */}
           <p className={`
             text-xs md:text-sm font-semibold truncate
             ${isLocalPlayer ? 'text-primary' : 'text-white'}
-            ${position === 'top' ? 'text-transparent' : ''}
+            ${position === 'top' ? 'text-[rgba(255,255,255,0)]' : ''}
             ${position === 'bottom' ? 'text-transparent' : ''}
           `}>
             {player.name}{isLocalPlayer ? " (You)" : ""}
@@ -136,7 +136,7 @@ export default function PlayerPosition({ playerId, position, showCards = false }
           <p className={`
             text-[10px] md:text-xs font-bold
             ${isLocalPlayer ? 'text-primary' : 'text-emerald-400'}
-            ${position === 'top' ? 'text-transparent' : ''}
+            ${position === 'top' ? 'text-[rgba(0,0,0,0)]' : ''}
             ${position === 'bottom' ? 'text-[rgba(0,0,0,0.02)]' : ''}
           `}>
             ${playerState?.chips?.toLocaleString() || "0"}
