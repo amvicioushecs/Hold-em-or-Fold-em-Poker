@@ -107,7 +107,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
             <Button
               size="sm"
               onClick={() => setShowStore(true)}
-              className="font-geist hover:bg-chart-1/90 bg-black px-0 py-0 border border-[#3a4146] text-[#f7d71c] shadow-[-1px_-1px_5px_0px_rgba(239,192,13,0.50)] rounded-md -mt-[2px] tracking-[0.089em] leading-none"
+              className="font-geist hover:bg-chart-1/90 bg-black px-0 py-0 border border-[#3a4146] text-[#f7d71c] shadow-[-1px_-1px_5px_0px_rgba(239,192,13,0.50)] rounded-md -mt-[2px] tracking-[0.089em] leading-none ml-[189px]"
             >
               <Sparkles className="w-4 h-4 mr-1.5" />
               <span className="text-xs md:text-sm">Store</span>
