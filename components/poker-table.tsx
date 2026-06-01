@@ -416,34 +416,7 @@ export default function PokerTable() {
         </div>
       </div>
 
-      {/* Raise Bar - Desktop Only */}
-      {!isAllInOrFoldMode && (
-        <div className="hidden md:block absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 bg-card p-4 lg:p-6 rounded-lg shadow-lg z-40 border-2 border-border">
-          <div className="text-center mb-4">
-            <p className="text-xs lg:text-sm font-semibold mb-2 text-foreground">Raise Bar</p>
-            <p className="text-xl lg:text-2xl font-bold text-foreground">${raiseAmount[0]}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              ${minRaise} - ${maxRaise}
-            </p>
-          </div>
-          <Slider
-            value={raiseAmount}
-            onValueChange={setRaiseAmount}
-            max={maxRaise}
-            min={minRaise}
-            step={10}
-            className="h-32 lg:h-48"
-            orientation="vertical"
-          />
-          <Button
-            className="w-full mt-4 text-sm"
-            disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-            onClick={handleRaise}
-          >
-            Confirm
-          </Button>
-        </div>
-      )}
+
     </div>
   )
 }
