@@ -280,20 +280,7 @@ export default function PokerTable() {
                 </div>
               )}
 
-              {/* Turn Timer - Center Display for Local Player */}
-              {gameState && isLocalPlayerTurn && (
-                <div className="absolute bottom-[13%] md:bottom-[16%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-                  <TurnTimer
-                    isActive={true}
-                    onTimeUp={handleTimeUp}
-                    duration={turnDuration}
-                    className="scale-110 md:scale-125"
-                  />
-                  <div className="bg-chart-4 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-chart-4/80 animate-pulse">
-                    <p className="text-xs md:text-sm font-bold text-background">YOUR TURN</p>
-                  </div>
-                </div>
-              )}
+
 
               {/* Game Phase Display */}
               {gameState && gameState.phase !== "waiting" && (
