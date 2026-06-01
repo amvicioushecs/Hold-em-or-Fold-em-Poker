@@ -71,11 +71,6 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
         {/* Video Feed */}
         <div className="relative w-16 h-16 md:w-28 md:h-28 lg:w-32 lg:h-32 shadow-md md:shadow-lg border border-border md:border-2 rounded-full overflow-hidden bg-black/50">
-          {/* Active Turn Glow */}
-          {isPlayerTurn && (
-            <div className="absolute inset-0 rounded-md md:rounded-lg ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" />
-          )}
-
           <VideoPlayer
             stream={player.stream}
             name={player.name}
