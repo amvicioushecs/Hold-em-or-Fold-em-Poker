@@ -3,14 +3,11 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Menu, Plus, Minus } from "lucide-react"
+import { Plus, Minus, Video, Settings } from "lucide-react"
 import PlayerPosition from "./player-position"
 import CommunityCards from "./community-cards"
-import VideoControls from "./video-controls"
-import ChatPanel from "./chat-panel"
 import GameMenu from "./game-menu"
 import Card from "./card"
-import TurnTimer from "./turn-timer"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useWebRTC } from "@/hooks/use-webrtc"
 import { useChat } from "@/hooks/use-chat"
@@ -20,7 +17,7 @@ import Lobby from "./lobby"
 import type { StakeTable } from "./table-selection"
 import DealerButton from "./dealer-button"
 import BlindInfo from "./blind-info"
-import GiftButton from "./gift-button"
+
 
 export default function PokerTable() {
   const [raiseAmount, setRaiseAmount] = useState([50])
@@ -173,46 +170,49 @@ export default function PokerTable() {
   return (
     <div className="relative w-full h-[100dvh] bg-background overflow-hidden">
       {/* Top Info Bar */}
-      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
-        {/* Menu Button */}
+      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-transparent z-40 flex items-center justify-between px-4">
+        {/* Back Button */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsMenuOpen(true)}
-          className="rounded-full w-10 h-10 hover:bg-card/50"
+          onClick={() => setShowLobby(true)}
+          className="w-10 h-10 hover:bg-card/50"
         >
-          <Menu className="w-5 h-5 md:w-6 md:h-6 text-foreground" />
+          <svg className="w-5 h-5 md:w-6 md:h-6 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
         </Button>
 
-        {/* Table Info - Center */}
-        {selectedTable && (
-          <div className="flex flex-col items-center">
-            <h2 className="text-sm md:text-base font-bold text-foreground flex items-center gap-2">
-              {selectedTable.name}
-              {isAllInOrFoldMode && <span className="text-xs text-destructive font-black px-1.5 py-0.5 bg-destructive/10 rounded">AOF</span>}
-            </h2>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-chart-4">${selectedTable.smallBlind}/${selectedTable.bigBlind}</span>
-              <span>•</span>
-              <span>Pot: <span className="text-chart-4 font-bold">${gameState?.pot || 0}</span></span>
-            </div>
-          </div>
-        )}
+        {/* Table Title - Left of Center */}
+        <div className="absolute left-16 top-1/2 -translate-y-1/2">
+          <h2 className="text-base md:text-lg font-semibold text-primary flex items-center gap-2">
+            <span className="text-primary">❖</span>
+            Poker Table
+          </h2>
+        </div>
 
-        {/* Right Side - Chat Toggle or Empty for balance */}
-        <div className="w-10" />
+        {/* Right Side - Video & Settings Icons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-10 h-10 hover:bg-card/50"
+          >
+            <Video className="w-5 h-5 text-foreground" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMenuOpen(true)}
+            className="w-10 h-10 hover:bg-card/50"
+          >
+            <Settings className="w-5 h-5 text-foreground" />
+          </Button>
+        </div>
       </div>
 
       {/* Game Menu */}
       <GameMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-
-      {/* Video Controls */}
-      <VideoControls />
-
-      {/* Chat Panel */}
-      <div className="absolute top-2 right-14 md:top-4 md:right-32 z-50">
-        <ChatPanel />
-      </div>
 
       {/* Main Container */}
       <div className="relative w-full h-full flex items-center justify-center p-0 pb-20 md:pb-24 bg-background">
@@ -290,49 +290,40 @@ export default function PokerTable() {
       </div>
 
       {/* Action Buttons - Mobile First */}
-      <div className="absolute bottom-2 left-0 right-0 px-2 z-40 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:px-0">
-        <div className="flex gap-2 md:gap-4 justify-center">
-          {/* Gift Button - Mobile and Desktop */}
-          {gameState && localPlayerState && (
-            <div className="absolute bottom-28 md:bottom-36 left-4 z-40">
-              <GiftButton
-                playerChips={localPlayerChips}
-                variant="secondary"
-                size="icon"
-                className="w-12 h-12 rounded-full shadow-xl"
-              />
-            </div>
-          )}
-
+      <div className="absolute bottom-4 left-0 right-0 px-4 z-40 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:px-0">
+        <div className="flex gap-3 md:gap-4 justify-center items-center">
+          {/* Fold Button - Dark Red */}
           <Button
-            variant="outline"
             size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleFold}
-            className="flex-1 md:flex-none py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation hover:bg-destructive hover:text-destructive-foreground hover:border-destructive shadow-xl disabled:opacity-50 bg-transparent"
+            className="px-6 py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation shadow-lg disabled:opacity-50 bg-[#4a1a1a] hover:bg-[#5a2a2a] text-chart-4 border-0"
           >
             Fold
           </Button>
+
+          {/* Call Button - Outlined */}
           <Button
             variant="outline"
             size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleCall}
-            className="flex-1 md:flex-none py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50 bg-transparent"
+            className="px-6 py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation shadow-lg disabled:opacity-50 bg-transparent border-2 border-muted-foreground text-foreground hover:bg-muted"
           >
             {getCallButtonLabel()}
           </Button>
+
+          {/* Raise Button - Gold */}
           {!isAllInOrFoldMode && (
             <>
               <Sheet open={isRaiseBarOpen} onOpenChange={setIsRaiseBarOpen}>
                 <SheetTrigger asChild>
                   <Button
-                    variant="outline"
                     size="lg"
                     disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-                    className="flex-1 md:hidden py-5 text-base font-semibold rounded-full touch-manipulation hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50 bg-transparent"
+                    className="md:hidden px-6 py-5 text-base font-semibold rounded-full touch-manipulation shadow-lg disabled:opacity-50 bg-chart-4 hover:bg-chart-4/90 text-background border-0"
                   >
-                    Raise ${raiseAmount[0]}
+                    RAISE
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="h-[300px]">
@@ -379,13 +370,12 @@ export default function PokerTable() {
                 </SheetContent>
               </Sheet>
               <Button
-                variant="outline"
                 size="lg"
                 disabled={!gameState || !isLocalPlayerTurn || !canRaise}
                 onClick={() => setIsRaiseBarOpen(true)}
-                className="hidden md:flex px-8 py-6 text-lg font-semibold rounded-full hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50"
+                className="hidden md:flex px-8 py-6 text-lg font-semibold rounded-full shadow-lg disabled:opacity-50 bg-chart-4 hover:bg-chart-4/90 text-background border-0"
               >
-                Raise ${raiseAmount[0]}
+                RAISE
               </Button>
             </>
           )}
