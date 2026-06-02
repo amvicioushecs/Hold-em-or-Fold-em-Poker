@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Menu, Plus, Minus, User } from "lucide-react"
+import { Menu, Plus, Minus } from "lucide-react"
 import PlayerPosition from "./player-position"
 import CommunityCards from "./community-cards"
 import VideoControls from "./video-controls"
@@ -227,119 +227,63 @@ export default function PokerTable() {
           {/* Local Player (bottom position) */}
           {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={false} />}
 
-          {/* Table Surface - Full Video Feed */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 overflow-hidden">
-            {/* Full Screen Video Background */}
-            <div className="relative w-full h-full bg-black flex items-center justify-center">
-              {/* Composite video view - multiple player feeds */}
-              <div className="absolute inset-0 grid grid-cols-2 md:grid-cols-3 gap-1 p-2 md:p-4 bg-black/90">
-                {/* All player videos */}
-                {playerIds.map((playerId, index) => {
-                  const player = players.get(playerId)
-                  return (
-                    <div key={playerId} className="relative bg-black rounded-lg overflow-hidden border border-white/10">
-                      {player?.stream ? (
-                        <video
-                          autoPlay
-                          playsInline
-                          muted={true}
-                          className="w-full h-full object-cover"
-                          ref={(ref) => {
-                            if (ref && player?.stream) {
-                              ref.srcObject = player.stream
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                          <User className="w-8 h-8 text-slate-600" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white font-medium">
-                        {player?.name}
-                      </div>
-                    </div>
-                  )
-                })}
+          {/* Table Surface */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-[95%] h-[60%] md:w-[80%] md:h-[75%] bg-[#0f3a28] rounded-[100px] md:rounded-[200px] shadow-2xl flex items-center justify-center border-[12px] md:border-[20px] border-[#1a1c24] ring-1 ring-white/5">
 
-                {/* Local player video */}
-                {players.has("local") && (
-                  <div className="relative bg-black rounded-lg overflow-hidden border border-white/10">
-                    {players.get("local")?.stream ? (
-                      <video
-                        autoPlay
-                        playsInline
-                        muted={true}
-                        className="w-full h-full object-cover scale-x-[-1]"
-                        ref={(ref) => {
-                          const localPlayer = players.get("local")
-                          if (ref && localPlayer?.stream) {
-                            ref.srcObject = localPlayer.stream
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-800">
-                        <User className="w-8 h-8 text-slate-600" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-2 left-2 bg-chart-4/90 px-2 py-1 rounded text-xs text-background font-bold">
-                      YOU
-                    </div>
-                  </div>
-                )}
+              {/* Blind Info Display */}
+              {gameState && selectedTable && (
+                <BlindInfo
+                  smallBlind={selectedTable.smallBlind}
+                  bigBlind={selectedTable.bigBlind}
+                  handNumber={gameState.handNumber}
+                />
+              )}
+
+              {/* Center Logo */}
+              <div className="absolute top-[12%] md:top-[15%]">
+                <Image
+                  src="/logo.png"
+                  alt="Hold'em or Fold'em Poker"
+                  width={150}
+                  height={150}
+                  className="md:w-32 md:h-32 lg:w-36 lg:h-36 my-[75px] py-0 px-0 h-[108px] w-[108px] border-0 border-transparent border-none shadow-none opacity-25"
+                />
               </div>
 
-              {/* Overlay Info */}
-              <div className="absolute inset-0 pointer-events-none">
-                {/* Blind Info Display */}
-                {gameState && selectedTable && (
-                  <div className="absolute top-4 left-4">
-                    <BlindInfo
-                      smallBlind={selectedTable.smallBlind}
-                      bigBlind={selectedTable.bigBlind}
-                      handNumber={gameState.handNumber}
-                    />
-                  </div>
-                )}
+              {/* Dealer Button */}
+              {gameState && gameState.dealerSeatNumber && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
 
-                {/* Community Cards */}
-                {gameState && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <CommunityCards />
-                  </div>
-                )}
+              {/* Community Cards */}
+              {gameState && <CommunityCards />}
 
-                {/* Player Hand Cards (bottom position) */}
-                {localPlayerCards.length > 0 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 md:gap-2">
-                    {localPlayerCards.map((card, index) => (
-                      <Card key={index} card={card} faceDown={false} animate={true} delay={index * 150} size="md" />
-                    ))}
-                  </div>
-                )}
+              {/* Player Hand Cards (bottom position) */}
+              {localPlayerCards.length > 0 && (
+                <div className="absolute bottom-[6%] md:bottom-[8%] left-1/2 -translate-x-1/2 flex gap-1 md:gap-2">
+                  {localPlayerCards.map((card, index) => (
+                    <Card key={index} card={card} faceDown={false} animate={true} delay={index * 150} size="md" />
+                  ))}
+                </div>
+              )}
 
-                {/* Dealer Button */}
-                {gameState && gameState.dealerSeatNumber && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
+              {/* Waiting for Players */}
+              {!gameState && players.size < 2 && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card/80 backdrop-blur-sm px-6 py-4 rounded-lg border-2 border-chart-4">
+                  <p className="text-base md:text-lg font-bold text-chart-4 text-center">
+                    Waiting for players...
+                    <br />
+                    <span className="text-sm text-chart-4/80">({players.size}/2 minimum)</span>
+                  </p>
+                </div>
+              )}
 
-                {/* Waiting for Players */}
-                {!gameState && players.size < 2 && (
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card/80 backdrop-blur-sm px-6 py-4 rounded-lg border-2 border-chart-4">
-                    <p className="text-base md:text-lg font-bold text-chart-4 text-center">
-                      Waiting for players...
-                      <br />
-                      <span className="text-sm text-chart-4/80">({players.size}/2 minimum)</span>
-                    </p>
-                  </div>
-                )}
+              {/* Game Phase Display */}
+              {gameState && gameState.phase !== "waiting" && (
+                <div className="absolute top-[20%] right-[15%] md:top-[25%] md:right-[20%] bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-chart-4">
+                  <p className="text-[10px] md:text-xs font-bold text-chart-4 uppercase">{gameState.phase}</p>
+                </div>
+              )}
 
-                {/* Game Phase Display */}
-                {gameState && gameState.phase !== "waiting" && (
-                  <div className="absolute top-4 right-4 bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-chart-4">
-                    <p className="text-[10px] md:text-xs font-bold text-chart-4 uppercase">{gameState.phase}</p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
