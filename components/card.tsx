@@ -90,7 +90,7 @@ export default function Card({
       {/* Card Face */}
       <div
         className={cn(
-          "absolute inset-0 rounded-lg bg-white border-gray-300 flex flex-col p-1 md:p-2",
+          "absolute inset-0 rounded-lg bg-white border-2 border-gray-300 flex flex-col items-center justify-center overflow-hidden",
           color === "red" ? "text-red-600" : "text-gray-900",
         )}
         style={{
@@ -100,24 +100,24 @@ export default function Card({
         {card ? (
           <>
             {/* Top Corner */}
-            <div className="flex flex-col items-center leading-none">
-              <span className="font-bold text-xs md:text-sm lg:text-base">{card.rank}</span>
-              <span className="text-base md:text-xl lg:text-2xl">{symbol}</span>
+            <div className="absolute top-0.5 left-0.5 flex flex-col items-center leading-tight">
+              <span className="font-bold text-xs md:text-sm truncate w-6">{card.rank}</span>
+              <span className="text-xs md:text-sm leading-none">{symbol}</span>
             </div>
 
             {/* Center Symbol */}
-            <div className="flex-1 flex items-center justify-center">
-              <span className="text-2xl md:text-4xl lg:text-5xl">{symbol}</span>
+            <div className="flex items-center justify-center flex-1">
+              <span className="text-lg md:text-2xl lg:text-3xl leading-none">{symbol}</span>
             </div>
 
             {/* Bottom Corner (rotated) */}
-            <div className="flex flex-col items-center leading-none rotate-180">
-              <span className="font-bold text-xs md:text-sm lg:text-base">{card.rank}</span>
-              <span className="text-base md:text-xl lg:text-2xl">{symbol}</span>
+            <div className="absolute bottom-0.5 right-0.5 flex flex-col items-center leading-tight rotate-180">
+              <span className="font-bold text-xs md:text-sm truncate w-6">{card.rank}</span>
+              <span className="text-xs md:text-sm leading-none">{symbol}</span>
             </div>
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">?</div>
+          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">?</div>
         )}
       </div>
     </div>
