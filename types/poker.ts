@@ -25,7 +25,7 @@ export interface HandEvaluation {
   description: string
 }
 
-export type PlayerAction = "fold" | "check" | "call" | "raise" | "all-in"
+export type PlayerAction = "fold" | "check" | "call" | "raise" | "all-in" | "check/fold"
 export type GamePhase = "waiting" | "pre-flop" | "flop" | "turn" | "river" | "showdown" | "complete"
 export type GameMode = "cash" | "sng" | "mtt" | "allin" | "omaha"
 

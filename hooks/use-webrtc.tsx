@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, useRef, useCallback, useMemo, type ReactNode } from "react"
 
 interface Player {
   id: string
@@ -37,7 +37,35 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map())
   const initializationAttempted = useRef(false)
 
-  const initializeMedia = async () => {
+  const demoPlayers = useMemo(
+    () => [
+      { id: "player-1", name: "Player 1" },
+      { id: "player-2", name: "Player 2" },
+      { id: "player-3", name: "Player 3" },
+      { id: "player-4", name: "Player 4" },
+      { id: "player-5", name: "Player 5" },
+    ],
+    [],
+  )
+
+  const addDemoPlayers = useCallback(() => {
+    setPlayers((prev) => {
+      const newPlayers = new Map(prev)
+      demoPlayers.forEach((player) => {
+        newPlayers.set(player.id, {
+          id: player.id,
+          name: player.name,
+          stream: null,
+          isLocal: false,
+          videoEnabled: false,
+          audioEnabled: false,
+        })
+      })
+      return newPlayers
+    })
+  }, [demoPlayers])
+
+  const initializeMedia = useCallback(async () => {
     // Skip if already attempted or initialized
     if (initializationAttempted.current || isMediaInitialized) {
       return
@@ -48,7 +76,6 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
     try {
       // Check if mediaDevices API is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.log("Media devices API not available - running without video/audio")
         setMediaError("Media devices not supported in this environment")
         setIsMediaInitialized(true)
         addDemoPlayers()
@@ -90,7 +117,6 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
         addDemoPlayers()
       }, 1000)
     } catch (error) {
-      console.log("Media access not available - running without video/audio:", error)
       setMediaError("Camera/microphone not available")
       setIsMediaInitialized(true)
 
@@ -113,36 +139,9 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
         addDemoPlayers()
       }, 1000)
     }
-  }
+  }, [isMediaInitialized, addDemoPlayers])
 
-  const addDemoPlayers = () => {
-    // In a real app, these would be actual peer connections
-    // For demo, we'll just add placeholder players
-    const demoPlayers = [
-      { id: "player-1", name: "Player 1" },
-      { id: "player-2", name: "Player 2" },
-      { id: "player-3", name: "Player 3" },
-      { id: "player-4", name: "Player 4" },
-      { id: "player-5", name: "Player 5" },
-    ]
-
-    setPlayers((prev) => {
-      const newPlayers = new Map(prev)
-      demoPlayers.forEach((player) => {
-        newPlayers.set(player.id, {
-          id: player.id,
-          name: player.name,
-          stream: null,
-          isLocal: false,
-          videoEnabled: false,
-          audioEnabled: false,
-        })
-      })
-      return newPlayers
-    })
-  }
-
-  const toggleVideo = () => {
+  const toggleVideo = useCallback(() => {
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0]
       if (videoTrack) {
@@ -161,9 +160,9 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
         })
       }
     }
-  }
+  }, [localStream])
 
-  const toggleAudio = () => {
+  const toggleAudio = useCallback(() => {
     if (localStream) {
       const audioTrack = localStream.getAudioTracks()[0]
       if (audioTrack) {
@@ -182,9 +181,9 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
         })
       }
     }
-  }
+  }, [localStream])
 
-  const addPlayer = (id: string, name: string, stream?: MediaStream) => {
+  const addPlayer = useCallback((id: string, name: string, stream?: MediaStream) => {
     setPlayers((prev) => {
       const newPlayers = new Map(prev)
       newPlayers.set(id, {
@@ -197,9 +196,9 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
       })
       return newPlayers
     })
-  }
+  }, [])
 
-  const removePlayer = (id: string) => {
+  const removePlayer = useCallback((id: string) => {
     setPlayers((prev) => {
       const newPlayers = new Map(prev)
       newPlayers.delete(id)
@@ -212,44 +211,65 @@ export function WebRTCProvider({ children }: { children: ReactNode }) {
       peerConnection.close()
       peerConnectionsRef.current.delete(id)
     }
-  }
+  }, [])
 
-  // Initialize media on mount - but don't block if it fails
   useEffect(() => {
-    // Use a small delay to avoid blocking initial render
-    const timer = setTimeout(() => {
+    // Use requestIdleCallback to run during idle time if available
+    const initCallback = () => {
       initializeMedia()
-    }, 100)
+    }
+
+    let idleCallbackId: number
+    if ("requestIdleCallback" in window) {
+      idleCallbackId = requestIdleCallback(initCallback)
+    } else {
+      // Fallback to setTimeout with longer delay
+      const timer = setTimeout(initCallback, 100)
+      return () => clearTimeout(timer)
+    }
 
     return () => {
-      clearTimeout(timer)
+      if ("cancelIdleCallback" in window && idleCallbackId) {
+        cancelIdleCallback(idleCallbackId)
+      }
       // Cleanup on unmount
       if (localStream) {
         localStream.getTracks().forEach((track) => track.stop())
       }
       peerConnectionsRef.current.forEach((pc) => pc.close())
     }
-  }, [])
+  }, [initializeMedia, localStream])
 
-  return (
-    <WebRTCContext.Provider
-      value={{
-        localStream,
-        players,
-        isVideoEnabled,
-        isAudioEnabled,
-        isMediaInitialized,
-        mediaError,
-        toggleVideo,
-        toggleAudio,
-        initializeMedia,
-        addPlayer,
-        removePlayer,
-      }}
-    >
-      {children}
-    </WebRTCContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      localStream,
+      players,
+      isVideoEnabled,
+      isAudioEnabled,
+      isMediaInitialized,
+      mediaError,
+      toggleVideo,
+      toggleAudio,
+      initializeMedia,
+      addPlayer,
+      removePlayer,
+    }),
+    [
+      localStream,
+      players,
+      isVideoEnabled,
+      isAudioEnabled,
+      isMediaInitialized,
+      mediaError,
+      toggleVideo,
+      toggleAudio,
+      initializeMedia,
+      addPlayer,
+      removePlayer,
+    ],
   )
+
+  return <WebRTCContext.Provider value={contextValue}>{children}</WebRTCContext.Provider>
 }
 
 export function useWebRTC() {
