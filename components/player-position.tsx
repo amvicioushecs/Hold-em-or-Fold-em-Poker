@@ -59,7 +59,8 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
   return (
     <div
-      className={`absolute bg-sidebar-border shadow-xl text-transparent border-0 rounded-2xl ${positionClasses[position]} z-30`}
+      className={`absolute bg-sidebar-border shadow-xl text-transparent border-0 ${positionClasses[position]} z-30`}
+      style={{ borderRadius: "25%" }}
     >
       <div className="relative">
         {/* Turn Timer Indicator */}
@@ -71,10 +72,10 @@ export default function PlayerPosition({ playerId, position, showCards = false }
         />
 
         {/* Video Feed */}
-        <div className="relative w-[96px] h-[128px] shadow-md md:shadow-lg border border-border md:border-2 rounded-xl overflow-hidden bg-black/50">
+        <div className="relative w-[96px] h-[128px] shadow-md md:shadow-lg border border-border md:border-2 overflow-hidden bg-black/50" style={{ borderRadius: "25%" }}>
           {/* Active Turn Glow */}
           {isPlayerTurn && (
-            <div className="absolute inset-0 rounded-xl ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" />
+            <div className="absolute inset-0 ring-4 ring-amber-400 animate-pulse z-10 pointer-events-none" style={{ borderRadius: "25%" }} />
           )}
 
           <VideoPlayer
