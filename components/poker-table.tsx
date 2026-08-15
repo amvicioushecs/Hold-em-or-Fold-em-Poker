@@ -176,7 +176,7 @@ export default function PokerTable() {
   }
 
   return (
-    <div className="relative w-full h-[100dvh] bg-background overflow-hidden">
+    <div className="relative w-full h-[100dvh] bg-[#303646] overflow-hidden">
       {/* Top Info Bar */}
       <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
         {/* Menu Button */}
@@ -220,7 +220,7 @@ export default function PokerTable() {
       </div>
 
       {/* Main Container */}
-      <div className="relative w-full h-full flex items-center justify-center p-0 pb-20 md:pb-24 bg-background">
+      <div className="relative w-full h-full flex items-center justify-center p-0 pb-20 md:pb-24 bg-[#303646]">
         {/* Poker Table */}
         <div className="relative w-full max-w-6xl h-full md:aspect-[16/9] flex items-center justify-center">
           {/* Player Positions */}
@@ -234,7 +234,7 @@ export default function PokerTable() {
 
           {/* Table Surface */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-[95%] h-[60%] md:w-[80%] md:h-[75%] bg-[#0f3a28] rounded-[100px] md:rounded-[200px] shadow-2xl flex items-center justify-center border-[12px] md:border-[20px] border-[#1a1c24] ring-1 ring-white/5">
+            <div className="relative w-[95%] h-[60%] md:w-[80%] md:h-[75%] rounded-[100px] md:rounded-[200px] shadow-[0px_20px_50px_rgba(0,0,0,0.8),_inset_0px_0px_50px_12px_rgba(0,0,0,0.5)] flex items-center justify-center border-[12px] md:border-[12px] border-[#3D3D3D] ring-1 ring-white/5" style={{ background: 'radial-gradient(107.61% 56.47% at 50% 50%, #2E7D32 0%, #1B5E20 100%)' }}>
 
 
               {/* Blind Info Display */}
@@ -256,6 +256,14 @@ export default function PokerTable() {
                   className="md:w-32 md:h-32 lg:w-36 lg:h-36 my-[75px] py-0 px-0 h-[108px] w-[108px] border-0 border-transparent border-none shadow-none opacity-25"
                 />
               </div>
+
+              {/* Pot Badge */}
+              {gameState && (
+                <div className="absolute top-[28%] md:top-[32%] left-1/2 -translate-x-1/2 bg-[rgba(49,56,82,0.24)] border border-[rgba(254,185,86,0.15)] backdrop-blur-[10px] rounded-[12px] px-6 py-2 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),_0px_8px_10px_-6px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center min-w-[120px] z-30">
+                  <span className="text-[9px] font-bold text-[#C6C6CE] tracking-[0.9px] uppercase">Pot</span>
+                  <span className="text-lg md:text-xl font-extrabold text-[#FEB956]">${gameState.pot || 0}</span>
+                </div>
+              )}
 
               {/* Dealer Button */}
               {gameState && gameState.dealerSeatNumber && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
@@ -319,11 +327,11 @@ export default function PokerTable() {
       </div>
 
       {/* Action Buttons - Mobile First */}
-      <div className="absolute bottom-2 left-0 right-0 px-2 z-40 md:bottom-8 md:left-1/2 md:-translate-x-1/2 md:px-0">
-        <div className="flex gap-2 md:gap-4 justify-center">
+      <div className="absolute bottom-0 left-0 right-0 px-6 py-4 pb-8 z-40 bg-[#313852] border-t border-[rgba(254,185,86,0.15)] shadow-[0px_-20px_40px_rgba(5,13,37,0.5)] backdrop-blur-[10px]">
+        <div className="flex gap-4 justify-center items-center max-w-4xl mx-auto w-full relative">
           {/* Gift Button - Mobile and Desktop */}
           {gameState && localPlayerState && (
-            <div className="absolute bottom-28 md:bottom-36 left-4 z-40">
+            <div className="absolute -top-16 left-0 z-40">
               <GiftButton
                 playerChips={localPlayerChips}
                 variant="secondary"
@@ -338,7 +346,7 @@ export default function PokerTable() {
             size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleFold}
-            className="flex-1 md:flex-none py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation hover:bg-destructive hover:text-destructive-foreground hover:border-destructive shadow-xl disabled:opacity-50 bg-transparent"
+            className="flex-1 py-3 text-base font-bold rounded-[12px] touch-manipulation shadow-xl disabled:opacity-50 bg-[#703646] border-[#EFD405] text-[#EFD405] h-[42px] hover:bg-[#8b4559] hover:text-[#EFD405]"
           >
             Fold
           </Button>
@@ -347,7 +355,7 @@ export default function PokerTable() {
             size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleCall}
-            className="flex-1 md:flex-none py-5 md:px-8 md:py-6 text-base md:text-lg font-semibold rounded-full touch-manipulation hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50 bg-transparent"
+            className="flex-1 py-3 text-base font-extrabold rounded-[12px] touch-manipulation shadow-xl disabled:opacity-50 bg-[#162246] border-[#EFD405] text-[#EFD405] h-[42px] hover:bg-[#203164] hover:text-[#EFD405]"
           >
             {getCallButtonLabel()}
           </Button>
@@ -359,7 +367,7 @@ export default function PokerTable() {
                     variant="outline"
                     size="lg"
                     disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-                    className="flex-1 md:hidden py-5 text-base font-semibold rounded-full touch-manipulation hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50 bg-transparent"
+                    className="flex-1 md:hidden py-3 text-base font-bold rounded-[12px] touch-manipulation shadow-[0px_10px_15px_-3px_rgba(254,185,86,0.2),_0px_4px_6px_-4px_rgba(254,185,86,0.2)] disabled:opacity-50 bg-gradient-to-r from-[#FEB956] to-[#AC7310] text-[#452B00] border-0 h-[42px] uppercase tracking-[-0.3px]"
                   >
                     Raise ${raiseAmount[0]}
                   </Button>
@@ -412,7 +420,7 @@ export default function PokerTable() {
                 size="lg"
                 disabled={!gameState || !isLocalPlayerTurn || !canRaise}
                 onClick={() => setIsRaiseBarOpen(true)}
-                className="hidden md:flex px-8 py-6 text-lg font-semibold rounded-full hover:bg-primary hover:text-primary-foreground shadow-xl disabled:opacity-50"
+                className="hidden md:flex px-8 py-3 text-base font-bold rounded-[12px] hover:opacity-90 shadow-[0px_10px_15px_-3px_rgba(254,185,86,0.2),_0px_4px_6px_-4px_rgba(254,185,86,0.2)] disabled:opacity-50 bg-gradient-to-r from-[#FEB956] to-[#AC7310] text-[#452B00] border-0 h-[42px] uppercase tracking-[-0.3px]"
               >
                 Raise ${raiseAmount[0]}
               </Button>
