@@ -24,7 +24,14 @@ function AuthForm({ mode }: AuthFormProps) {
     setIsLoading(true)
     
     // TODO: Implement actual authentication logic
+    // For now, simulate successful auth after delay
     await new Promise((resolve) => setTimeout(resolve, 1000))
+    
+    // In production, this would call your auth API and update global state
+    console.log(`${mode === 'login' ? 'Login' : 'Signup'} attempt:`, {
+      email: formData.email,
+      username: isSignup ? formData.username : undefined,
+    })
     
     setIsLoading(false)
   }
@@ -172,8 +179,12 @@ function AuthForm({ mode }: AuthFormProps) {
 
 function SocialLogin() {
   const handleSocialLogin = async (provider: string) => {
-    // TODO: Implement social login
-    console.log(`Login with ${provider}`)
+    // TODO: Implement social login with actual OAuth flow
+    console.log(`Initiating ${provider} login...`)
+    
+    // In production, this would redirect to OAuth provider or open popup
+    // Example: window.location.href = `/api/auth/${provider}`
+    alert(`${provider} login coming soon!`)
   }
 
   return (
