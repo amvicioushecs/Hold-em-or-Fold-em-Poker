@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Righteous as V0_Font_Righteous } from 'next/font/google'
+import { AuthProvider } from '@/contexts/auth-context'
 
 // Initialize fonts
 const _righteous = V0_Font_Righteous({ subsets: ['latin'], weight: ["400"] })
@@ -21,7 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased`} suppressHydrationWarning>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Analytics />
       </body>
     </html>

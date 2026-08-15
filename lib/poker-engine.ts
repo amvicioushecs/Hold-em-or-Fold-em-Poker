@@ -615,6 +615,21 @@ function advanceTurn(gameState: GameState): GameState {
 function advancePhase(gameState: GameState): GameState {
   const newState = { ...gameState }
 
+  // Check if hand is won early because everyone else folded
+  const activePlayers = newState.players.filter((p) => !p.folded)
+  if (activePlayers.length === 1) {
+    newState.phase = "showdown"
+    newState.winners = [activePlayers[0].id]
+    
+    // Distribute pot to the only remaining player
+    const winner = newState.players.find((p) => p.id === activePlayers[0].id)
+    if (winner) {
+      winner.chips += newState.pot
+    }
+    newState.pot = 0
+    return newState
+  }
+
   // Reset player bets and actions for the new phase
   newState.players.forEach((player) => {
     player.bet = 0
@@ -639,20 +654,46 @@ function advancePhase(gameState: GameState): GameState {
       newState.phase = "river"
       break
 
-    case "river":
+    case "river": {
       newState.phase = "showdown"
-      newState.winners = determineWinners(newState.players, newState.communityCards, newState)
+      const winners = determineWinners(newState.players, newState.communityCards, newState)
+      newState.winners = winners
+      
+      // Distribute pot to winners
+      if (winners.length > 0) {
+        const share = Math.floor(newState.pot / winners.length)
+        const remainder = newState.pot % winners.length
+        
+        newState.players.forEach((player) => {
+          if (winners.includes(player.id)) {
+            player.chips += share
+          }
+        })
+        
+        // Give remainder to the first winner
+        const firstWinner = newState.players.find((p) => p.id === winners[0])
+        if (firstWinner) {
+          firstWinner.chips += remainder
+        }
+      }
+      newState.pot = 0
       break
+    }
 
     case "showdown":
       newState.phase = "complete"
       break
   }
 
-  // Set first active player after dealer as current player
-  newState.currentPlayerIndex = (newState.dealerIndex + 1) % newState.players.length
-  while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn) {
-    newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
+  // Set first active player after dealer as current player if anyone can act
+  const playersWhoCanAct = newState.players.filter((p) => !p.folded && !p.allIn)
+  if (playersWhoCanAct.length > 0) {
+    newState.currentPlayerIndex = (newState.dealerIndex + 1) % newState.players.length
+    while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn) {
+      newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
+    }
+  } else {
+    newState.currentPlayerIndex = newState.dealerIndex
   }
 
   return newState

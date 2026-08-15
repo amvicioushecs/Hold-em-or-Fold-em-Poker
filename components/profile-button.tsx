@@ -2,28 +2,47 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { User } from "lucide-react"
+import { User, LogIn, LogOut } from "lucide-react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import UserProfile from "./user-profile"
 import type { UserProfile as UserProfileType } from "@/types/profile"
 import { useWebRTC } from "@/hooks/use-webrtc"
+import { useAuth } from "@/contexts/auth-context"
+import { signOut } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
 export default function ProfileButton() {
   const [isOpen, setIsOpen] = useState(false)
   const { players } = useWebRTC()
   const localPlayer = Array.from(players.values()).find((p) => p.isLocal)
+  const { userProfile, isAuthenticated, refreshProfile } = useAuth()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut()
+    refreshProfile()
+    router.refresh()
+  }
+
+  const handleSignIn = () => {
+    router.push("/auth/login?redirectedFrom=/")
+  }
+
+  // Use profile values from authenticated user, or fall back to mock details
+  const displayName = userProfile?.username || localPlayer?.name || "Guest Player"
+  const displayChips = userProfile?.chip_stack !== undefined ? userProfile.chip_stack : 302480000
 
   // Mock profile data - in a real app, this would come from a database
   const mockProfile: UserProfileType = {
-    id: "71696988",
-    name: localPlayer?.name || "Hector Verdugo",
+    id: userProfile?.id || "71696988",
+    name: displayName,
     country: "United States",
     language: "English",
     isVerified: true,
     vipLevel: 3,
     level: 98,
     levelProgress: 65,
-    chips: 256235646,
+    chips: displayChips,
     bio: "This player did not enter any info.",
     stats: {
       totalHands: 66518,
@@ -126,21 +145,43 @@ export default function ProfileButton() {
   }
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsOpen(true)}
-        className="text-white hover:bg-white/10 rounded-full"
-      >
-        <User className="w-5 h-5" />
-      </Button>
+    <div className="flex items-center gap-2">
+      {isAuthenticated ? (
+        <>
+          <Button
+            variant="ghost"
+            onClick={() => setIsOpen(true)}
+            className="text-white hover:bg-white/10 rounded-full px-4 flex items-center gap-2"
+          >
+            <User className="w-4 h-4 text-blue-400" />
+            <span className="text-sm font-bold">{displayName}</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSignOut}
+            className="text-slate-400 hover:text-white hover:bg-white/10 rounded-full"
+            title="Sign Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
+        </>
+      ) : (
+        <Button
+          onClick={handleSignIn}
+          className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-full flex items-center gap-2"
+        >
+          <LogIn className="w-4 h-4" />
+          <span>Sign In</span>
+        </Button>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-0 max-w-full h-full m-0 border-0">
           <UserProfile profile={mockProfile} isOwnProfile={true} onClose={() => setIsOpen(false)} />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

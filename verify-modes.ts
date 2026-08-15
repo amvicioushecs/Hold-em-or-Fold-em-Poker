@@ -185,11 +185,60 @@ async function testSngBlinds() {
     assert(gameState.pot === 67, `Level 3 Pot should be 67, got ${gameState.pot}`);
 }
 
+async function testPotDistribution() {
+    log("Testing Pot Distribution...");
+    let gameState = initializeGame(["p1", "p2"], ["P1", "P2"], [1, 2], 1000, 1, "cash");
+
+    // Manually configure the state at the river
+    gameState.phase = "river";
+    gameState.pot = 150;
+    gameState.currentBet = 0;
+    gameState.currentPlayerIndex = 0; // P1 to act first
+
+    gameState.players[0].bet = 0;
+    gameState.players[0].lastAction = undefined;
+    gameState.players[0].folded = false;
+    gameState.players[0].chips = 900;
+    gameState.players[0].cards = [
+        { rank: "A", suit: "spades" },
+        { rank: "A", suit: "hearts" }
+    ];
+
+    gameState.players[1].bet = 0;
+    gameState.players[1].lastAction = undefined;
+    gameState.players[1].folded = false;
+    gameState.players[1].chips = 900;
+    gameState.players[1].cards = [
+        { rank: "K", suit: "spades" },
+        { rank: "K", suit: "hearts" }
+    ];
+
+    gameState.communityCards = [
+        { rank: "2", suit: "clubs" },
+        { rank: "3", suit: "clubs" },
+        { rank: "4", suit: "clubs" },
+        { rank: "5", suit: "clubs" },
+        { rank: "7", suit: "diamonds" }
+    ];
+
+    // P1 checks
+    gameState = processAction(gameState, "p1", "check");
+    // P2 checks -> Should trigger showdown and distribute the pot
+    gameState = processAction(gameState, "p2", "check");
+
+    assert(gameState.phase === "showdown", `Phase should be showdown, got ${gameState.phase}`);
+    assert(gameState.winners.length === 1 && gameState.winners[0] === "p1", `P1 should be the winner, got ${gameState.winners}`);
+    assert(gameState.players[0].chips === 1050, `P1 should have 900 + 150 = 1050 chips, got ${gameState.players[0].chips}`);
+    assert(gameState.players[1].chips === 900, `P2 should have 900 chips, got ${gameState.players[1].chips}`);
+    assert(gameState.pot === 0, `Pot should be 0 after distribution, got ${gameState.pot}`);
+}
+
 async function runTests() {
     try {
         await testOmahaDealing();
         await testOmahaEvaluation();
         await testSngBlinds();
+        await testPotDistribution();
         log("All tests passed!");
     } catch (e) {
         console.error(e);
