@@ -9,6 +9,7 @@ import ChatBubble from "./chat-bubble"
 import Card from "./card"
 import BlindMarker from "./blind-marker"
 import PlayerTurnIndicator from "./player-turn-indicator"
+import { cn } from "@/lib/utils"
 
 interface PlayerPositionProps {
   playerId: string
@@ -48,12 +49,12 @@ export default function PlayerPosition({ playerId, position, showCards = false }
   const isPlayerTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === playerId
 
   const positionClasses: Record<string, string> = {
-    top: "top-[-20px] left-1/2 -translate-x-1/2 md:top-4",
-    "top-left": "top-10 -left-2 md:top-16 md:left-4",
-    "top-right": "top-10 -right-2 md:top-16 md:right-4",
-    "bottom-left": "bottom-32 -left-2 md:bottom-32 md:left-4",
-    "bottom-right": "bottom-32 -right-2 md:bottom-32 md:right-4",
-    bottom: "bottom-4 left-1/2 -translate-x-1/2 md:bottom-4",
+    top: "top-14 left-1/2 -translate-x-1/2 md:top-16",
+    "top-left": "top-28 left-2 md:top-24 md:left-4",
+    "top-right": "top-28 right-2 md:top-24 md:right-4",
+    "bottom-left": "bottom-36 left-2 md:bottom-36 md:left-4",
+    "bottom-right": "bottom-36 right-2 md:bottom-36 md:right-4",
+    bottom: "bottom-24 left-1/2 -translate-x-1/2 md:bottom-6",
   }
 
   return (
@@ -110,7 +111,10 @@ export default function PlayerPosition({ playerId, position, showCards = false }
       </div>
 
       {/* Player Info (Chips only - Name removed) */}
-      <div className="mt-1 md:mt-2 text-center backdrop-blur-sm rounded-full px-2 py-0.5 md:px-3 md:py-1 max-w-[80px] md:max-w-none mx-auto bg-black/60 border border-white/10 shadow-sm">
+      <div className={cn(
+        "mt-1 md:mt-2 text-center backdrop-blur-sm rounded-full px-2 py-0.5 md:px-3 md:py-1 max-w-[80px] md:max-w-none mx-auto bg-black/60 border border-white/10 shadow-sm transition-all",
+        showCards && playerCards.length > 0 && "mt-6 md:mt-2"
+      )}>
         <div className="flex items-center justify-center gap-1">
           <p className="text-[10px] md:text-xs text-white font-bold tracking-tight">${playerState?.chips || 0}</p>
           {playerState && playerState.bet > 0 && (
