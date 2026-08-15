@@ -1,27 +1,79 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+*.env.*
 
-# next.js
-/.next/
-/out/
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
 
-# production
-/build
+# Editors
+.vscode/
+.idea/
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# System files
+.DS_Store
+Thumbs.db
 
-# env files
-.env*
+# Coverage
+coverage/
+htmlcov/
+.coverage
 
-# vercel
-.vercel
+# Build directories
+dist/
+build/
+target/
+.gradle/
 
-# typescript
+# Python specific
+.mypy_cache/
+.pytest_cache/
+
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+
+# Next.js build artifacts
+.next/
+out/
+.vercel/
 *.tsbuildinfo
 next-env.d.ts
