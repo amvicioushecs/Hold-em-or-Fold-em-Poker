@@ -1,5 +1,5 @@
 
-import { initializeGame, startNewHand, determineWinners, dealCards, processAction } from "./lib/poker-engine";
+import { initializeGame, startNewHand, determineWinners, dealHoleCards, processAction } from "./lib/poker-engine";
 import { Card, GameState } from "@/types/poker";
 
 // Mock deck manager if needed, or rely on internal ONE
