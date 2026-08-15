@@ -10,8 +10,7 @@ import type {
 } from "@/types/poker"
 import { deckManager } from "./deck-manager"
 
-const RANKS: Rank[] = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
-
+// Constants
 const RANK_VALUES: Record<Rank, number> = {
   "2": 2,
   "3": 3,
@@ -41,59 +40,70 @@ const HAND_RANK_VALUES: Record<HandRank, number> = {
   "royal-flush": 10,
 }
 
-// Create and shuffle a deck using DeckManager
-export function createDeck(): Card[] {
+const HAND_EVALUATION_MULTIPLIER = 1_000_000
+const KICKER_BASE = 15
+const BLIND_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes standard
+
+/**
+ * Resets and shuffles the deck using the DeckManager singleton.
+ */
+export function resetDeck(): void {
   deckManager.reset()
-  return []
 }
 
-// Deal cards to players using DeckManager
-export function dealCards(
-  deck: Card[],
-  numPlayers: number,
-  cardsPerPlayer = 2,
-): { playerCards: Card[][]; remainingDeck: Card[] } {
+/**
+ * Deals hole cards to all players.
+ * @param numPlayers - Number of players at the table
+ * @param cardsPerPlayer - Cards per player (2 for Texas Hold'em, 4 for Omaha)
+ * @returns Array of card arrays for each player
+ */
+export function dealHoleCards(numPlayers: number, cardsPerPlayer = 2): Card[][] {
   const playerCards: Card[][] = Array.from({ length: numPlayers }, () => [])
 
-  // Deal cards to each player
-  for (let i = 0; i < cardsPerPlayer; i++) {
-    for (let j = 0; j < numPlayers; j++) {
+  // Deal cards in rounds (one card at a time to each player)
+  for (let round = 0; round < cardsPerPlayer; round++) {
+    for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
       const card = deckManager.drawOne()
       if (card) {
-        playerCards[j].push(card)
+        playerCards[playerIndex].push(card)
       }
     }
   }
 
-  return { playerCards, remainingDeck: [] }
+  return playerCards
 }
 
-// Deal community cards using DeckManager
-export function dealCommunityCards(
-  deck: Card[],
-  phase: "flop" | "turn" | "river",
-): { cards: Card[]; remainingDeck: Card[] } {
+/**
+ * Deals community cards for a specific phase.
+ * @param phase - The dealing phase (flop, turn, or river)
+ * @returns Array of community cards for this phase
+ */
+export function dealCommunityCards(phase: "flop" | "turn" | "river"): Card[] {
   const cards: Card[] = []
 
-  // Burn one card
+  // Burn one card before dealing
   const burnCard = deckManager.drawOne()
   if (burnCard) {
     deckManager.discard([burnCard])
   }
 
-  if (phase === "flop") {
-    cards.push(...deckManager.draw(3))
-  } else {
+  // Deal appropriate number of cards for the phase
+  const cardsToDeal = phase === "flop" ? 3 : 1
+  for (let i = 0; i < cardsToDeal; i++) {
     const card = deckManager.drawOne()
     if (card) {
       cards.push(card)
     }
   }
 
-  return { cards, remainingDeck: [] }
+  return cards
 }
 
-// Evaluate a poker hand
+/**
+ * Evaluates the best possible 5-card poker hand from a set of cards.
+ * @param cards - Array of cards to evaluate (must have at least 5)
+ * @returns The best hand evaluation
+ */
 export function evaluateHand(cards: Card[]): HandEvaluation {
   if (cards.length < 5) {
     throw new Error("Need at least 5 cards to evaluate hand")
@@ -112,6 +122,9 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
   return bestHand!
 }
 
+/**
+ * Evaluates exactly 5 cards and returns the hand ranking.
+ */
 function evaluateFiveCards(cards: Card[]): HandEvaluation {
   const sortedCards = [...cards].sort((a, b) => RANK_VALUES[b.rank] - RANK_VALUES[a.rank])
 
@@ -122,114 +135,78 @@ function evaluateFiveCards(cards: Card[]): HandEvaluation {
 
   // Royal Flush
   if (isFlush && isStraight && sortedCards[0].rank === "A") {
-    return {
-      rank: "royal-flush",
-      value: HAND_RANK_VALUES["royal-flush"] * 1000000,
-      cards: sortedCards,
-      description: "Royal Flush",
-    }
+    return createHandEvaluation("royal-flush", sortedCards, "Royal Flush")
   }
 
   // Straight Flush
   if (isFlush && isStraight) {
-    return {
-      rank: "straight-flush",
-      value: HAND_RANK_VALUES["straight-flush"] * 1000000 + RANK_VALUES[sortedCards[0].rank],
-      cards: sortedCards,
-      description: "Straight Flush",
-    }
+    return createHandEvaluation("straight-flush", sortedCards, "Straight Flush", RANK_VALUES[sortedCards[0].rank])
   }
 
   // Four of a Kind
   if (counts[0] === 4) {
-    return {
-      rank: "four-of-a-kind",
-      value: HAND_RANK_VALUES["four-of-a-kind"] * 1000000 + getQuadValue(rankCounts),
-      cards: sortedCards,
-      description: "Four of a Kind",
-    }
+    return createHandEvaluation("four-of-a-kind", sortedCards, "Four of a Kind", getQuadValue(rankCounts))
   }
 
   // Full House
   if (counts[0] === 3 && counts[1] === 2) {
-    return {
-      rank: "full-house",
-      value: HAND_RANK_VALUES["full-house"] * 1000000 + getFullHouseValue(rankCounts),
-      cards: sortedCards,
-      description: "Full House",
-    }
+    return createHandEvaluation("full-house", sortedCards, "Full House", getFullHouseValue(rankCounts))
   }
 
   // Flush
   if (isFlush) {
-    return {
-      rank: "flush",
-      value: HAND_RANK_VALUES.flush * 1000000 + getHighCardValue(sortedCards),
-      cards: sortedCards,
-      description: "Flush",
-    }
+    return createHandEvaluation("flush", sortedCards, "Flush", getHighCardValue(sortedCards))
   }
 
   // Straight
   if (isStraight) {
-    return {
-      rank: "straight",
-      value: HAND_RANK_VALUES.straight * 1000000 + RANK_VALUES[sortedCards[0].rank],
-      cards: sortedCards,
-      description: "Straight",
-    }
+    return createHandEvaluation("straight", sortedCards, "Straight", RANK_VALUES[sortedCards[0].rank])
   }
 
   // Three of a Kind
   if (counts[0] === 3) {
-    return {
-      rank: "three-of-a-kind",
-      value: HAND_RANK_VALUES["three-of-a-kind"] * 1000000 + getTripValue(rankCounts),
-      cards: sortedCards,
-      description: "Three of a Kind",
-    }
+    return createHandEvaluation("three-of-a-kind", sortedCards, "Three of a Kind", getTripValue(rankCounts))
   }
 
   // Two Pair
   if (counts[0] === 2 && counts[1] === 2) {
-    return {
-      rank: "two-pair",
-      value: HAND_RANK_VALUES["two-pair"] * 1000000 + getTwoPairValue(rankCounts),
-      cards: sortedCards,
-      description: "Two Pair",
-    }
+    return createHandEvaluation("two-pair", sortedCards, "Two Pair", getTwoPairValue(rankCounts))
   }
 
   // Pair
   if (counts[0] === 2) {
-    return {
-      rank: "pair",
-      value: HAND_RANK_VALUES.pair * 1000000 + getPairValue(rankCounts),
-      cards: sortedCards,
-      description: "Pair",
-    }
+    return createHandEvaluation("pair", sortedCards, "Pair", getPairValue(rankCounts))
   }
 
   // High Card
+  return createHandEvaluation("high-card", sortedCards, "High Card", getHighCardValue(sortedCards))
+}
+
+/**
+ * Creates a standardized hand evaluation object.
+ */
+function createHandEvaluation(
+  rank: HandRank,
+  cards: Card[],
+  description: string,
+  tiebreakerValue = 0,
+): HandEvaluation {
   return {
-    rank: "high-card",
-    value: HAND_RANK_VALUES["high-card"] * 1000000 + getHighCardValue(sortedCards),
-    cards: sortedCards,
-    description: "High Card",
+    rank,
+    value: HAND_RANK_VALUES[rank] * HAND_EVALUATION_MULTIPLIER + tiebreakerValue,
+    cards,
+    description,
   }
 }
 
+/**
+ * Checks if 5 cards form a straight.
+ */
 function checkStraight(cards: Card[]): boolean {
   const values = cards.map((c) => RANK_VALUES[c.rank])
 
   // Check for regular straight
-  let isStraight = true
-  for (let i = 0; i < values.length - 1; i++) {
-    if (values[i] - values[i + 1] !== 1) {
-      isStraight = false
-      break
-    }
-  }
+  let isStraight = values.every((v, i) => i === 0 || values[i - 1] - v === 1)
 
   // Check for A-2-3-4-5 straight (wheel)
   if (!isStraight && cards[0].rank === "A" && cards[1].rank === "5") {
@@ -240,14 +217,19 @@ function checkStraight(cards: Card[]): boolean {
   return isStraight
 }
 
+/**
+ * Counts occurrences of each rank in the hand.
+ */
 function getRankCounts(cards: Card[]): Record<string, number> {
-  const counts: Record<string, number> = {}
-  for (const card of cards) {
+  return cards.reduce((counts, card) => {
     counts[card.rank] = (counts[card.rank] || 0) + 1
-  }
-  return counts
+    return counts
+  }, {} as Record<string, number>)
 }
 
+/**
+ * Generates all combinations of a given size from an array.
+ */
 function getCombinations<T>(array: T[], size: number): T[][] {
   if (size > array.length) return []
   if (size === array.length) return [array]
@@ -257,15 +239,23 @@ function getCombinations<T>(array: T[], size: number): T[][] {
   for (let i = 0; i < array.length - size + 1; i++) {
     const head = array[i]
     const tailCombinations = getCombinations(array.slice(i + 1), size - 1)
-    for (const tail of tailCombinations) {
-      combinations.push([head, ...tail])
-    }
+    combinations.push(...tailCombinations.map((tail) => [head, ...tail]))
   }
   return combinations
 }
 
+/**
+ * Calculates kicker-based tiebreaker values for various hand types.
+ */
+function calculateKickerValue(ranks: string[], basePowers: number[]): number {
+  return ranks.reduce((sum, rank, i) => sum + RANK_VALUES[rank as Rank] * Math.pow(KICKER_BASE, basePowers[i] ?? 0), 0)
+}
+
 function getHighCardValue(cards: Card[]): number {
-  return cards.reduce((sum, card, index) => sum + RANK_VALUES[card.rank] * Math.pow(15, 4 - index), 0)
+  return calculateKickerValue(
+    cards.map((c) => c.rank),
+    [4, 3, 2, 1, 0],
+  )
 }
 
 function getPairValue(rankCounts: Record<string, number>): number {
@@ -274,10 +264,7 @@ function getPairValue(rankCounts: Record<string, number>): number {
     .filter((rank) => rankCounts[rank] === 1)
     .sort((a, b) => RANK_VALUES[b as Rank] - RANK_VALUES[a as Rank])
 
-  return (
-    RANK_VALUES[pairRank as Rank] * 1000 +
-    kickers.reduce((sum, rank, i) => sum + RANK_VALUES[rank as Rank] * Math.pow(15, 2 - i), 0)
-  )
+  return RANK_VALUES[pairRank as Rank] * 1000 + calculateKickerValue(kickers, [2, 1])
 }
 
 function getTwoPairValue(rankCounts: Record<string, number>): number {
@@ -295,10 +282,7 @@ function getTripValue(rankCounts: Record<string, number>): number {
     .filter((rank) => rankCounts[rank] === 1)
     .sort((a, b) => RANK_VALUES[b as Rank] - RANK_VALUES[a as Rank])
 
-  return (
-    RANK_VALUES[tripRank as Rank] * 1000 +
-    kickers.reduce((sum, rank, i) => sum + RANK_VALUES[rank as Rank] * Math.pow(15, 1 - i), 0)
-  )
+  return RANK_VALUES[tripRank as Rank] * 1000 + calculateKickerValue(kickers, [1, 0])
 }
 
 function getFullHouseValue(rankCounts: Record<string, number>): number {
@@ -315,12 +299,10 @@ function getQuadValue(rankCounts: Record<string, number>): number {
   return RANK_VALUES[quadRank as Rank] * 100 + RANK_VALUES[kicker as Rank]
 }
 
-// Determine winners
-export function determineWinners(
-  players: PlayerState[],
-  communityCards: Card[],
-  gameState: GameState,
-): string[] {
+/**
+ * Determines the winner(s) at showdown based on hand evaluations.
+ */
+export function determineWinners(players: PlayerState[], communityCards: Card[], gameState: GameState): string[] {
   const activePlayers = players.filter((p) => !p.folded)
 
   if (activePlayers.length === 1) {
@@ -339,16 +321,17 @@ export function determineWinners(
   return evaluations.filter((e) => e.evaluation.value === maxValue).map((e) => e.playerId)
 }
 
+/**
+ * Evaluates an Omaha hand (must use exactly 2 hole cards and 3 community cards).
+ */
 function evaluateOmahaHand(holeCards: Card[], communityCards: Card[]): HandEvaluation {
-  if (holeCards.length !== 4) {
-    // Fallback or error handling
-    if (holeCards.length < 2) throw new Error("Omaha requires at least 2 hole cards")
+  if (holeCards.length < 2) {
+    throw new Error("Omaha requires at least 2 hole cards")
   }
   if (communityCards.length < 3) {
     throw new Error("Omaha requires at least 3 community cards to evaluate")
   }
 
-  // Omaha rule: Must use exactly 2 hole cards and exactly 3 community cards
   const holeCombinations = getCombinations(holeCards, 2)
   const boardCombinations = getCombinations(communityCards, 3)
 
@@ -367,7 +350,9 @@ function evaluateOmahaHand(holeCards: Card[], communityCards: Card[]): HandEvalu
   return bestHand!
 }
 
-// Initialize game state
+/**
+ * Initializes a new poker game with the given configuration.
+ */
 export function initializeGame(
   playerIds: string[],
   playerNames: string[],
@@ -377,9 +362,9 @@ export function initializeGame(
   gameMode: GameMode = "sng",
   timestamp: number = Date.now(),
 ): GameState {
-  deckManager.reset()
+  resetDeck()
   const cardsPerPlayer = gameMode === "omaha" ? 4 : 2
-  const { playerCards } = dealCards([], playerIds.length, cardsPerPlayer)
+  const playerCards = dealHoleCards(playerIds.length, cardsPerPlayer)
 
   const players: PlayerState[] = playerIds.map((id, index) => ({
     id,
@@ -422,11 +407,18 @@ export function initializeGame(
   }
 }
 
-// Start new hand with rotated dealer
-export function startNewHand(currentState: GameState, smallBlind: number, bigBlind: number, timestamp: number = Date.now()): GameState {
-  deckManager.reset()
+/**
+ * Starts a new hand with rotated dealer button and fresh cards.
+ */
+export function startNewHand(
+  currentState: GameState,
+  smallBlind: number,
+  bigBlind: number,
+  timestamp: number = Date.now(),
+): GameState {
+  resetDeck()
 
-  // Reset player states
+  // Reset player states for the new hand
   const players = currentState.players.map((p) => ({
     ...p,
     bet: 0,
@@ -450,7 +442,7 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
 
   // Deal new cards
   const cardsPerPlayer = currentState.gameMode === "omaha" ? 4 : 2
-  const { playerCards } = dealCards([], players.length, cardsPerPlayer)
+  const playerCards = dealHoleCards(players.length, cardsPerPlayer)
   players.forEach((player, index) => {
     player.cards = playerCards[index]
   })
@@ -458,12 +450,8 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
   // Calculate Blinds based on Mode
   let currentSmallBlind = smallBlind
   let currentBigBlind = bigBlind
-  let newBlindLevel = currentState.blindLevel || 1
-  let lastIncreaseTime = currentState.lastBlindIncreaseTime || Date.now()
-
-  // Increase blinds for SNG/MTT based on TIME (e.g., every 5 minutes)
-  // For demo/testing, using a short interval (e.g. 1 minute or 10 seconds checking relative to hand start)
-  const BLIND_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes standard
+  let newBlindLevel = currentState.blindLevel ?? 1
+  let lastIncreaseTime = currentState.lastBlindIncreaseTime ?? Date.now()
 
   if (currentState.gameMode === "sng" || currentState.gameMode === "mtt") {
     // Check if enough time has passed since last increase
@@ -513,13 +501,15 @@ export function startNewHand(currentState: GameState, smallBlind: number, bigBli
     deck: [],
     winners: [],
     handNumber: currentState.handNumber + 1,
-    gameMode: currentState.gameMode, // Preserve game mode across hands
+    gameMode: currentState.gameMode,
     blindLevel: newBlindLevel,
     lastBlindIncreaseTime: lastIncreaseTime,
   }
 }
 
-// Process player action
+/**
+ * Processes a player's action (fold, check, call, raise, all-in).
+ */
 export function processAction(
   gameState: GameState,
   playerId: string,
@@ -534,12 +524,10 @@ export function processAction(
     return gameState
   }
 
-  if (newState.gameMode === "allin") {
-    // In all-in or fold mode, only allow fold or all-in actions
-    if (action !== "fold" && action !== "all-in") {
-      console.log("[v0] All-in or fold mode: only fold and all-in allowed, rejecting action:", action)
-      return gameState // Reject any action that isn't fold or all-in
-    }
+  // In all-in or fold mode, only allow fold or all-in actions
+  if (newState.gameMode === "allin" && action !== "fold" && action !== "all-in") {
+    console.log("[v0] All-in or fold mode: only fold and all-in allowed, rejecting action:", action)
+    return gameState
   }
 
   switch (action) {
@@ -555,7 +543,7 @@ export function processAction(
       player.lastAction = "check"
       break
 
-    case "call":
+    case "call": {
       const callAmount = Math.min(newState.currentBet - player.bet, player.chips)
       player.chips -= callAmount
       player.bet += callAmount
@@ -566,8 +554,9 @@ export function processAction(
         player.lastAction = "all-in"
       }
       break
+    }
 
-    case "raise":
+    case "raise": {
       if (!amount || amount <= newState.currentBet) {
         return gameState
       }
@@ -582,8 +571,9 @@ export function processAction(
         player.lastAction = "all-in"
       }
       break
+    }
 
-    case "all-in":
+    case "all-in": {
       const allInAmount = player.chips
       player.chips = 0
       player.bet += allInAmount
@@ -592,11 +582,15 @@ export function processAction(
       player.allIn = true
       player.lastAction = "all-in"
       break
+    }
   }
 
   return advanceTurn(newState)
 }
 
+/**
+ * Advances to the next player's turn or moves to the next phase if all players have acted.
+ */
 function advanceTurn(gameState: GameState): GameState {
   const newState = { ...gameState }
   const activePlayers = newState.players.filter((p) => !p.folded && !p.allIn)
@@ -607,6 +601,7 @@ function advanceTurn(gameState: GameState): GameState {
     return advancePhase(newState)
   }
 
+  // Move to next non-folded, non-all-in player
   do {
     newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
   } while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn)
@@ -614,31 +609,33 @@ function advanceTurn(gameState: GameState): GameState {
   return newState
 }
 
+/**
+ * Advances the game to the next phase (flop, turn, river, showdown).
+ */
 function advancePhase(gameState: GameState): GameState {
   const newState = { ...gameState }
 
+  // Reset player bets and actions for the new phase
   newState.players.forEach((player) => {
     player.bet = 0
     player.lastAction = undefined
   })
   newState.currentBet = 0
 
+  // Deal community cards and transition to next phase
   switch (newState.phase) {
     case "pre-flop":
-      const { cards: flopCards } = dealCommunityCards([], "flop")
-      newState.communityCards = flopCards
+      newState.communityCards = dealCommunityCards("flop")
       newState.phase = "flop"
       break
 
     case "flop":
-      const { cards: turnCards } = dealCommunityCards([], "turn")
-      newState.communityCards = [...newState.communityCards, ...turnCards]
+      newState.communityCards = [...newState.communityCards, ...dealCommunityCards("turn")]
       newState.phase = "turn"
       break
 
     case "turn":
-      const { cards: riverCards } = dealCommunityCards([], "river")
-      newState.communityCards = [...newState.communityCards, ...riverCards]
+      newState.communityCards = [...newState.communityCards, ...dealCommunityCards("river")]
       newState.phase = "river"
       break
 
@@ -652,6 +649,7 @@ function advancePhase(gameState: GameState): GameState {
       break
   }
 
+  // Set first active player after dealer as current player
   newState.currentPlayerIndex = (newState.dealerIndex + 1) % newState.players.length
   while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn) {
     newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
