@@ -266,9 +266,9 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                   {/* Prize Structure */}
                   <div className="mb-4">
                     <p className="text-xs text-gray-400 mb-2">Prize Structure:</p>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-3 sm:flex gap-2">
                       {config.prizePoolPercentages.map((percent, idx) => (
-                        <div key={idx} className="flex-1 bg-black/30 rounded-lg p-2 text-center">
+                        <div key={idx} className="bg-black/30 rounded-lg p-2 text-center sm:flex-1">
                           <p className="text-xs text-gray-400">#{idx + 1}</p>
                           <p className="text-sm font-bold text-yellow-400">{percent}%</p>
                         </div>
