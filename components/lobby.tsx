@@ -12,6 +12,7 @@ import ProfileButton from "./profile-button"
 import Store from "./store"
 import type { WheelPrize } from "@/types/lucky-wheel"
 import TournamentLobby from "./tournament-lobby"
+import SngLobby from "./sng-lobby"
 import { tournamentEngine } from "@/lib/tournament-engine"
 
 interface LobbyProps {
@@ -27,6 +28,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   const [playerChips, setPlayerChips] = useReactState(302480000) // 302.48M chips
   const [playerDiamonds, setPlayerDiamonds] = useReactState(72)
   const [showTournamentLobby, setShowTournamentLobby] = useReactState(false)
+  const [showSngLobby, setShowSngLobby] = useReactState(false)
   const [showStore, setShowStore] = useReactState(false)
   const localPlayer = Array.from(players.values()).find((p) => p.isLocal)
 
@@ -34,6 +36,10 @@ export default function Lobby({ onStartGame }: LobbyProps) {
     if (mode === "3pin") return // Closed mode
     if (mode === "mtt") {
       setShowTournamentLobby(true)
+      return
+    }
+    if (mode === "sng") {
+      setShowSngLobby(true)
       return
     }
     setSelectedGameMode(mode)
@@ -82,7 +88,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         bigBlind: tournamentObj.config.blindStructure[0].bigBlind,
         minBuyIn: tournamentObj.config.buyIn,
         maxBuyIn: tournamentObj.config.buyIn,
-        gameMode: "mtt",
+        gameMode: tournamentId.startsWith("sng-") ? "sng" : "mtt",
         currentPlayers: 1,
         maxPlayers: tournamentObj.config.playersPerTable,
         isVip: false,
@@ -102,6 +108,18 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         onClose={() => setShowTournamentLobby(false)}
         onStart={(id) => {
           setShowTournamentLobby(false)
+          handleStartTournament(id)
+        }}
+      />
+    )
+  }
+
+  if (showSngLobby) {
+    return (
+      <SngLobby
+        onClose={() => setShowSngLobby(false)}
+        onStart={(id) => {
+          setShowSngLobby(false)
           handleStartTournament(id)
         }}
       />
