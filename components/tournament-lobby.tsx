@@ -8,7 +8,7 @@ import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle } from "lucide-reac
 import { cn } from "@/lib/utils"
 import type { TournamentConfig } from "@/types/tournament"
 import { useTournament } from "@/hooks/use-tournament"
-import { tournamentEngine } from "@/lib/tournament-engine"
+import { tournamentEngine, TournamentEngine } from "@/lib/tournament-engine"
 
 interface TournamentLobbyProps {
   onClose: () => void
@@ -33,7 +33,7 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
         minPlayers: 6,
         playersPerTable: 6,
         lateRegistrationMinutes: 15,
-        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
+        blindStructure: TournamentEngine.getDefaultBlindStructure(),
         prizePoolPercentages: [50, 30, 20],
       },
       {
@@ -46,7 +46,7 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
         minPlayers: 9,
         playersPerTable: 6,
         lateRegistrationMinutes: 30,
-        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
+        blindStructure: TournamentEngine.getDefaultBlindStructure(),
         prizePoolPercentages: [40, 25, 15, 10, 10],
       },
       {
@@ -59,7 +59,7 @@ export default function TournamentLobby({ onClose, onStart }: TournamentLobbyPro
         minPlayers: 9,
         playersPerTable: 9,
         lateRegistrationMinutes: 45,
-        blindStructure: tournamentEngine.constructor.getDefaultBlindStructure(),
+        blindStructure: TournamentEngine.getDefaultBlindStructure(),
         prizePoolPercentages: [50, 30, 20],
       },
     ]

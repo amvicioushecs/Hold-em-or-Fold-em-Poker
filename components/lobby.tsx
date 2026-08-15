@@ -11,6 +11,8 @@ import SeatSelection from "./seat-selection"
 import ProfileButton from "./profile-button"
 import Store from "./store"
 import type { WheelPrize } from "@/types/lucky-wheel"
+import TournamentLobby from "./tournament-lobby"
+import { tournamentEngine } from "@/lib/tournament-engine"
 
 interface LobbyProps {
   onStartGame: (table: StakeTable, seatId: number) => void
@@ -24,11 +26,16 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   const [selectedTable, setSelectedTable] = useReactState<StakeTable | null>(null)
   const [playerChips, setPlayerChips] = useReactState(302480000) // 302.48M chips
   const [playerDiamonds, setPlayerDiamonds] = useReactState(72)
+  const [showTournamentLobby, setShowTournamentLobby] = useReactState(false)
   const [showStore, setShowStore] = useReactState(false)
   const localPlayer = Array.from(players.values()).find((p) => p.isLocal)
 
   const handleGameModeClick = (mode: string) => {
     if (mode === "3pin") return // Closed mode
+    if (mode === "mtt") {
+      setShowTournamentLobby(true)
+      return
+    }
     setSelectedGameMode(mode)
     setShowTableSelection(true)
   }
@@ -65,8 +72,40 @@ export default function Lobby({ onStartGame }: LobbyProps) {
     return amount.toString()
   }
 
+  const handleStartTournament = (tournamentId: string) => {
+    const tournamentObj = tournamentEngine.getTournament(tournamentId)
+    if (tournamentObj) {
+      const table: StakeTable = {
+        id: tournamentId,
+        name: tournamentObj.config.name,
+        smallBlind: tournamentObj.config.blindStructure[0].smallBlind,
+        bigBlind: tournamentObj.config.blindStructure[0].bigBlind,
+        minBuyIn: tournamentObj.config.buyIn,
+        maxBuyIn: tournamentObj.config.buyIn,
+        gameMode: "mtt",
+        currentPlayers: 1,
+        maxPlayers: tournamentObj.config.playersPerTable,
+        isVip: false,
+        difficulty: "Intermediate",
+      }
+      onStartGame(table, 1)
+    }
+  }
+
   if (showStore) {
     return <Store onClose={() => setShowStore(false)} playerChips={playerChips} playerDiamonds={playerDiamonds} />
+  }
+
+  if (showTournamentLobby) {
+    return (
+      <TournamentLobby
+        onClose={() => setShowTournamentLobby(false)}
+        onStart={(id) => {
+          setShowTournamentLobby(false)
+          handleStartTournament(id)
+        }}
+      />
+    )
   }
 
   return (
