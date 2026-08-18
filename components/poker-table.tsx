@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Menu, Plus, Minus } from "lucide-react"
+import { Menu, Plus, Minus, ArrowLeft, Settings, Video } from "lucide-react"
 import PlayerPosition from "./player-position"
 import CommunityCards from "./community-cards"
 import VideoControls from "./video-controls"
@@ -19,7 +19,6 @@ import Image from "next/image"
 import Lobby from "./lobby"
 import type { StakeTable } from "./table-selection"
 import DealerButton from "./dealer-button"
-import BlindInfo from "./blind-info"
 import GiftButton from "./gift-button"
 
 export default function PokerTable() {
@@ -30,6 +29,8 @@ export default function PokerTable() {
   const [showLobby, setShowLobby] = useState(true)
   const [selectedTable, setSelectedTable] = useState<StakeTable | null>(null)
   const [selectedSeat, setSelectedSeat] = useState<number>(4)
+  const [localTimeLeft, setLocalTimeLeft] = useState(30)
+
   const { players } = useWebRTC()
   const { sendMessage } = useChat()
   const { gameState, startGame, makeAction, handleTimeUp, turnDuration } = usePokerGame()
@@ -74,7 +75,28 @@ export default function PokerTable() {
     }
   }, [players, gameState, gameStarted, startGame, showLobby, selectedTable, selectedSeat])
 
-  const positions = useMemo(() => ["top", "top-left", "top-right", "bottom-left", "bottom-right"], [])
+  const seatToPositionMap = useMemo<Record<number, string>>(() => ({
+    1: "top",
+    2: "top-right",
+    3: "bottom-right",
+    4: "bottom",
+    5: "bottom-left",
+    6: "top-left"
+  }), [])
+
+  const getPlayerPosition = useCallback((playerId: string) => {
+    if (gameState) {
+      const pState = gameState.players.find((p) => p.id === playerId)
+      if (pState) {
+        return seatToPositionMap[pState.seatNumber] || "top"
+      }
+    }
+    // Fallback if game hasn't started yet
+    if (playerId === "local") return "bottom"
+    const index = playerIds.indexOf(playerId)
+    const fallbackPositions = ["top", "top-left", "top-right", "bottom-left", "bottom-right"]
+    return fallbackPositions[index] || "top"
+  }, [gameState, playerIds, seatToPositionMap])
 
   // Get local player's state
   const localPlayerState = gameState?.players.find((p) => p.id === "local")
@@ -90,6 +112,27 @@ export default function PokerTable() {
   // Calculate minimum raise amount (current bet + big blind, or double current bet)
   const minRaise = currentBet > 0 ? currentBet * 2 : 20
   const maxRaise = localPlayerChips + localPlayerBet
+
+  useEffect(() => {
+    if (!isLocalPlayerTurn || !gameState) {
+      setLocalTimeLeft(turnDuration)
+      return
+    }
+
+    setLocalTimeLeft(turnDuration)
+    const interval = setInterval(() => {
+      setLocalTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          handleTimeUp()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isLocalPlayerTurn, turnDuration, handleTimeUp, gameState])
 
   const handleFold = useCallback(() => {
     if (!isLocalPlayerTurn || !gameState) return
@@ -176,36 +219,60 @@ export default function PokerTable() {
   }
 
   return (
-    <div className="relative w-full h-[100dvh] bg-[#303646] overflow-hidden">
+    <div className="relative w-full h-[100dvh] bg-[#111625] overflow-hidden">
       {/* Top Info Bar */}
-      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-4">
-        {/* Menu Button */}
+      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-[#131a2e]/60 backdrop-blur-md border-b border-slate-900/50 z-40 flex items-center justify-between px-4">
+        {/* Back Button */}
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsMenuOpen(true)}
-          className="rounded-full w-10 h-10 hover:bg-card/50"
+          onClick={() => setShowLobby(true)}
+          className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]"
         >
-          <Menu className="w-5 h-5 md:w-6 md:h-6 text-foreground" />
+          <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
 
         {/* Table Info - Center */}
         {selectedTable && (
           <div className="flex flex-col items-center">
-            <h2 className="text-sm md:text-base font-bold text-foreground flex items-center gap-2">
+            <h2 className="text-xs md:text-sm font-extrabold text-[#FEB956] flex items-center gap-1.5 uppercase tracking-wider">
               {selectedTable.name}
-              {isAllInOrFoldMode && <span className="text-xs text-destructive font-black px-1.5 py-0.5 bg-destructive/10 rounded">AOF</span>}
+              {isAllInOrFoldMode && (
+                <span className="text-[9px] text-red-500 font-black px-1.5 py-0.2 bg-red-500/10 rounded border border-red-500/20">
+                  AOF
+                </span>
+              )}
             </h2>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium text-chart-4">${selectedTable.smallBlind}/${selectedTable.bigBlind}</span>
-              <span>•</span>
-              <span>Pot: <span className="text-chart-4 font-bold">${gameState?.pot || 0}</span></span>
+            <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 font-medium mt-0.5">
+              <span>Blinds: ${selectedTable.smallBlind}/${selectedTable.bigBlind}</span>
+              {gameState && (
+                <>
+                  <span>•</span>
+                  <span>Pot: <span className="text-[#FEB956] font-bold">${gameState.pot || 0}</span></span>
+                </>
+              )}
             </div>
           </div>
         )}
 
-        {/* Right Side - Chat Toggle or Empty for balance */}
-        <div className="w-10" />
+        {/* Right Side Controls */}
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]"
+          >
+            <Video className="w-5 h-5 md:w-6 md:h-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMenuOpen(true)}
+            className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]"
+          >
+            <Settings className="w-5 h-5 md:w-6 md:h-6" />
+          </Button>
+        </div>
       </div>
 
       {/* Game Menu */}
@@ -220,142 +287,88 @@ export default function PokerTable() {
       </div>
 
       {/* Main Container */}
-      <div className="relative w-full h-full flex items-center justify-center p-0 pb-20 md:pb-24 bg-[#303646]">
-        {/* Poker Table */}
-        <div className="relative w-full max-w-6xl h-full md:aspect-[16/9] flex items-center justify-center">
+      <div className="relative w-full h-full flex items-center justify-center p-0 pt-16 pb-24 md:pb-28 bg-[#111625]">
+        {/* Game Area Container - Fixed aspect ratio to keep vertical felt table and player circles scaled together */}
+        <div className="relative w-[92%] max-w-[420px] h-[80dvh] md:max-w-[450px] md:h-[82dvh] flex items-center justify-center">
+          
           {/* Player Positions */}
-          {playerIds.map((playerId, index) => {
-            if (index >= positions.length) return null
-            return <PlayerPosition key={playerId} playerId={playerId} position={positions[index]} showCards={true} />
+          {playerIds.map((playerId) => {
+            const position = getPlayerPosition(playerId)
+            return <PlayerPosition key={playerId} playerId={playerId} position={position} showCards={true} />
           })}
 
           {/* Local Player (bottom position) */}
-          {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={false} />}
+          {players.has("local") && (
+            <PlayerPosition playerId="local" position="bottom" showCards={true} />
+          )}
 
-          {/* Table Surface */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-[95%] h-[60%] md:w-[80%] md:h-[75%] rounded-[100px] md:rounded-[200px] shadow-[0px_20px_50px_rgba(0,0,0,0.8),_inset_0px_0px_50px_12px_rgba(0,0,0,0.5)] flex items-center justify-center border-[12px] md:border-[12px] border-[#3D3D3D] ring-1 ring-white/5" style={{ background: 'radial-gradient(107.61% 56.47% at 50% 50%, #2E7D32 0%, #1B5E20 100%)' }}>
-
-
-              {/* Blind Info Display */}
-              {gameState && selectedTable && (
-                <BlindInfo
-                  smallBlind={selectedTable.smallBlind}
-                  bigBlind={selectedTable.bigBlind}
-                  handNumber={gameState.handNumber}
-                />
-              )}
-
-              {/* Center Logo */}
-              <div className="absolute top-[12%] md:top-[15%]">
+          {/* Felt Table Surface */}
+          <div className="absolute inset-x-8 top-[10%] bottom-[10%] flex items-center justify-center z-10 pointer-events-none">
+            <div
+              className="relative w-full h-full rounded-[110px] shadow-[0px_20px_50px_rgba(0,0,0,0.85),_inset_0px_0px_60px_15px_rgba(0,0,0,0.6)] border-[10px] border-[#222938] ring-1 ring-white/5 overflow-hidden"
+              style={{ background: 'radial-gradient(ellipse at center, #1b5e20 0%, #0d3c13 100%)' }}
+            >
+              {/* Gold Felt Border Lining */}
+              <div className="absolute inset-3 rounded-[98px] border border-amber-500/10 pointer-events-none" />
+              
+              {/* Subtle Center Logo */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.05] pointer-events-none">
                 <Image
                   src="/logo.png"
                   alt="Hold'em or Fold'em Poker"
-                  width={150}
-                  height={150}
-                  className="md:w-32 md:h-32 lg:w-36 lg:h-36 my-[75px] py-0 px-0 h-[108px] w-[108px] border-0 border-transparent border-none shadow-none opacity-25"
+                  width={140}
+                  height={140}
+                  className="w-24 h-24 md:w-32 md:h-32 object-contain"
                 />
               </div>
-
-              {/* Pot Badge */}
-              {gameState && (
-                <div className="absolute top-[28%] md:top-[32%] left-1/2 -translate-x-1/2 bg-[rgba(49,56,82,0.24)] border border-[rgba(254,185,86,0.15)] backdrop-blur-[10px] rounded-[12px] px-6 py-2 shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1),_0px_8px_10px_-6px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center min-w-[120px] z-30">
-                  <span className="text-[9px] font-bold text-[#C6C6CE] tracking-[0.9px] uppercase">Pot</span>
-                  <span className="text-lg md:text-xl font-extrabold text-[#FEB956]">${gameState.pot || 0}</span>
-                </div>
-              )}
-
-              {/* Dealer Button */}
-              {gameState && gameState.dealerSeatNumber && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
-
-              {/* Community Cards */}
-              {gameState && <CommunityCards />}
-
-              {/* Player Hand Cards (bottom position) */}
-              {localPlayerCards.length > 0 && (
-                <div className="absolute bottom-[6%] md:bottom-[8%] left-1/2 -translate-x-1/2 flex gap-1 md:gap-2">
-                  {localPlayerCards.map((card, index) => (
-                    <Card key={index} card={card} faceDown={false} animate={true} delay={index * 150} size="md" />
-                  ))}
-                </div>
-              )}
-
-
-
-              {/* Waiting for Players */}
-              {!gameState && players.size < 2 && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card/80 backdrop-blur-sm px-6 py-4 rounded-lg border-2 border-chart-4">
-                  <p className="text-base md:text-lg font-bold text-chart-4 text-center">
-                    Waiting for players...
-                    <br />
-                    <span className="text-sm text-chart-4/80">({players.size}/2 minimum)</span>
-                  </p>
-                </div>
-              )}
-
-              {/* Turn Timer - Center Display for Local Player */}
-              {gameState && isLocalPlayerTurn && (
-                <div className="absolute bottom-[13%] md:bottom-[16%] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-                  <TurnTimer
-                    isActive={true}
-                    onTimeUp={handleTimeUp}
-                    duration={turnDuration}
-                    className="scale-110 md:scale-125"
-                  />
-                  <div className="bg-chart-4 backdrop-blur-sm px-4 py-1.5 rounded-full border-2 border-chart-4/80 animate-pulse">
-                    <p className="text-xs md:text-sm font-bold text-background">YOUR TURN</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Game Phase Display */}
-              {gameState && gameState.phase !== "waiting" && (
-                <div className="absolute top-[20%] right-[15%] md:top-[25%] md:right-[20%] bg-card/80 backdrop-blur-sm px-3 py-1 rounded-full border border-chart-4">
-                  <p className="text-[10px] md:text-xs font-bold text-chart-4 uppercase">{gameState.phase}</p>
-                </div>
-              )}
-
-              {/* Player Chips Display */}
-              {localPlayerState && (
-                <div className="absolute bottom-[22%] md:bottom-[25%] left-1/2 -translate-x-1/2 bg-card/60 backdrop-blur-sm px-3 py-1 rounded-full">
-                  <p className="text-xs md:text-sm font-bold text-chart-4">Chips: ${localPlayerChips}</p>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* Dealer Button */}
+          {gameState && gameState.dealerSeatNumber && (
+            <DealerButton seatNumber={gameState.dealerSeatNumber} />
+          )}
+
+          {/* Community Cards */}
+          {gameState && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+              <CommunityCards />
+            </div>
+          )}
+
+          {/* Waiting for Players Message */}
+          {!gameState && players.size < 2 && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#131a2e]/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-amber-500/20 shadow-2xl z-30">
+              <p className="text-sm md:text-base font-extrabold text-[#FEB956] text-center tracking-wide uppercase">
+                Waiting for players...
+                <br />
+                <span className="text-xs text-slate-400 font-semibold normal-case mt-1 block">({players.size}/2 minimum)</span>
+              </p>
+            </div>
+          )}
+
+
         </div>
       </div>
 
       {/* Action Buttons - Mobile First */}
-      <div className="absolute bottom-0 left-0 right-0 px-6 py-4 pb-8 z-40 bg-[#313852] border-t border-[rgba(254,185,86,0.15)] shadow-[0px_-20px_40px_rgba(5,13,37,0.5)] backdrop-blur-[10px]">
-        <div className="flex gap-4 justify-center items-center max-w-4xl mx-auto w-full relative">
-          {/* Gift Button - Mobile and Desktop */}
-          {gameState && localPlayerState && (
-            <div className="absolute -top-16 left-0 z-40">
-              <GiftButton
-                playerChips={localPlayerChips}
-                variant="secondary"
-                size="icon"
-                className="w-12 h-12 rounded-full shadow-xl"
-              />
-            </div>
-          )}
+      <div className="absolute bottom-0 left-0 right-0 px-6 py-4 pb-8 z-40 bg-[#131a2e] border-t border-slate-800/80 shadow-[0px_-15px_30px_rgba(0,0,0,0.5)] backdrop-blur-md">
+        <div className="flex gap-4 justify-center items-center max-w-md mx-auto w-full relative">
+
 
           <Button
             variant="outline"
-            size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleFold}
-            className="flex-1 py-3 text-base font-bold rounded-[12px] touch-manipulation shadow-xl disabled:opacity-50 bg-[#703646] border-[#EFD405] text-[#EFD405] h-[42px] hover:bg-[#8b4559] hover:text-[#EFD405]"
+            className="flex-1 h-[44px] text-xs font-bold rounded-xl border border-amber-500/30 text-[#FEB956] bg-transparent hover:bg-amber-500/5 hover:text-[#FEB956] uppercase tracking-wider shadow-lg transition-all"
           >
             Fold
           </Button>
           <Button
             variant="outline"
-            size="lg"
             disabled={!gameState || !isLocalPlayerTurn}
             onClick={handleCall}
-            className="flex-1 py-3 text-base font-extrabold rounded-[12px] touch-manipulation shadow-xl disabled:opacity-50 bg-[#162246] border-[#EFD405] text-[#EFD405] h-[42px] hover:bg-[#203164] hover:text-[#EFD405]"
+            className="flex-1 h-[44px] text-xs font-bold rounded-xl border border-amber-500/30 text-[#FEB956] bg-transparent hover:bg-amber-500/5 hover:text-[#FEB956] uppercase tracking-wider shadow-lg transition-all"
           >
             {getCallButtonLabel()}
           </Button>
@@ -364,22 +377,20 @@ export default function PokerTable() {
               <Sheet open={isRaiseBarOpen} onOpenChange={setIsRaiseBarOpen}>
                 <SheetTrigger asChild>
                   <Button
-                    variant="outline"
-                    size="lg"
                     disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-                    className="flex-1 md:hidden py-3 text-base font-bold rounded-[12px] touch-manipulation shadow-[0px_10px_15px_-3px_rgba(254,185,86,0.2),_0px_4px_6px_-4px_rgba(254,185,86,0.2)] disabled:opacity-50 bg-gradient-to-r from-[#FEB956] to-[#AC7310] text-[#452B00] border-0 h-[42px] uppercase tracking-[-0.3px]"
+                    className="flex-1 md:hidden h-[44px] text-xs font-black rounded-xl bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90 uppercase tracking-wider shadow-lg border-0 transition-all"
                   >
                     Raise ${raiseAmount[0]}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[300px]">
+                <SheetContent side="bottom" className="h-[300px] bg-[#131a2e] border-slate-800">
                   <SheetHeader>
-                    <SheetTitle>Raise Amount</SheetTitle>
+                    <SheetTitle className="text-white">Raise Amount</SheetTitle>
                   </SheetHeader>
-                  <div className="py-6">
+                  <div className="py-6 text-white">
                     <div className="text-center mb-6">
-                      <p className="text-4xl font-bold text-foreground">${raiseAmount[0]}</p>
-                      <p className="text-sm text-muted-foreground mt-2">
+                      <p className="text-4xl font-extrabold text-[#FEB956]">${raiseAmount[0]}</p>
+                      <p className="text-xs text-slate-400 mt-2">
                         Min: ${minRaise} • Max: ${maxRaise}
                       </p>
                     </div>
@@ -388,7 +399,7 @@ export default function PokerTable() {
                         size="icon"
                         variant="outline"
                         onClick={handleDecrementRaise}
-                        className="touch-manipulation bg-transparent"
+                        className="touch-manipulation bg-transparent border-slate-700 text-[#FEB956] hover:bg-slate-800"
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
@@ -398,29 +409,27 @@ export default function PokerTable() {
                         max={maxRaise}
                         min={minRaise}
                         step={10}
-                        className="flex-1"
+                        className="flex-grow accent-[#FEB956]"
                       />
                       <Button
                         size="icon"
                         variant="outline"
                         onClick={handleIncrementRaise}
-                        className="touch-manipulation bg-transparent"
+                        className="touch-manipulation bg-transparent border-slate-700 text-[#FEB956] hover:bg-slate-800"
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
                     </div>
-                    <Button className="w-full mt-6 py-6 text-lg touch-manipulation" onClick={handleRaise}>
+                    <Button className="w-full mt-6 py-6 text-base font-bold bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90" onClick={handleRaise}>
                       Confirm Raise
                     </Button>
                   </div>
                 </SheetContent>
               </Sheet>
               <Button
-                variant="outline"
-                size="lg"
                 disabled={!gameState || !isLocalPlayerTurn || !canRaise}
                 onClick={() => setIsRaiseBarOpen(true)}
-                className="hidden md:flex px-8 py-3 text-base font-bold rounded-[12px] hover:opacity-90 shadow-[0px_10px_15px_-3px_rgba(254,185,86,0.2),_0px_4px_6px_-4px_rgba(254,185,86,0.2)] disabled:opacity-50 bg-gradient-to-r from-[#FEB956] to-[#AC7310] text-[#452B00] border-0 h-[42px] uppercase tracking-[-0.3px]"
+                className="hidden md:flex px-8 h-[44px] text-xs font-black rounded-xl bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90 uppercase tracking-wider shadow-lg border-0 transition-all"
               >
                 Raise ${raiseAmount[0]}
               </Button>
@@ -429,34 +438,7 @@ export default function PokerTable() {
         </div>
       </div>
 
-      {/* Raise Bar - Desktop Only */}
-      {!isAllInOrFoldMode && (
-        <div className="hidden md:block absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 bg-card p-4 lg:p-6 rounded-lg shadow-lg z-40 border-2 border-border">
-          <div className="text-center mb-4">
-            <p className="text-xs lg:text-sm font-semibold mb-2 text-foreground">Raise Bar</p>
-            <p className="text-xl lg:text-2xl font-bold text-foreground">${raiseAmount[0]}</p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              ${minRaise} - ${maxRaise}
-            </p>
-          </div>
-          <Slider
-            value={raiseAmount}
-            onValueChange={handleRaiseAmountChange}
-            max={maxRaise}
-            min={minRaise}
-            step={10}
-            className="h-32 lg:h-48"
-            orientation="vertical"
-          />
-          <Button
-            className="w-full mt-4 text-sm"
-            disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-            onClick={handleRaise}
-          >
-            Confirm
-          </Button>
-        </div>
-      )}
+
     </div>
   )
 }

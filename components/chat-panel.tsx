@@ -72,11 +72,6 @@ export default function ChatPanel() {
           className="w-9 h-9 md:w-12 md:h-12 rounded-full shadow-lg touch-manipulation relative"
         >
           <MessageCircle className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center font-bold">
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </span>
-          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md p-0 flex flex-col h-full">
