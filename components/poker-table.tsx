@@ -31,9 +31,9 @@ export default function PokerTable() {
   const [selectedSeat, setSelectedSeat] = useState<number>(4)
   const [localTimeLeft, setLocalTimeLeft] = useState(30)
 
-  const { players } = useWebRTC()
+  const { players, roomCode, myUserId } = useWebRTC()
   const { sendMessage } = useChat()
-  const { gameState, startGame, makeAction, handleTimeUp, turnDuration } = usePokerGame()
+  const { gameState, startGame, makeAction, handleTimeUp, turnDuration, isHost } = usePokerGame()
   const [playerIds, setPlayerIds] = useState<string[]>([])
 
   const calculatedPlayerIds = useMemo(() => {
@@ -46,16 +46,20 @@ export default function PokerTable() {
 
   // Start game when we have enough players (at least 2)
   useEffect(() => {
+    // In multiplayer mode, only the host should trigger startGame.
+    // Clients will transition automatically when they receive the broadcasted gameState.
+    if (roomCode && !isHost) return
+
     if (players.size >= 2 && !gameState && !gameStarted && !showLobby) {
       const timer = setTimeout(() => {
-        const allPlayerIds = Array.from(players.keys())
+        const allPlayerIds = Array.from(players.keys()).map((id) => (id === "local" ? myUserId : id))
         const allPlayerNames = Array.from(players.values()).map((p) => p.name)
 
         // Assign seat numbers (local player gets selectedSeat, others get remaining seats)
         const seatNumbers: number[] = []
         const availableSeats = [1, 2, 3, 4, 5, 6].filter((s) => s !== selectedSeat)
 
-        allPlayerIds.forEach((id) => {
+        Array.from(players.keys()).forEach((id) => {
           if (id === "local") {
             seatNumbers.push(selectedSeat)
           } else {
@@ -66,14 +70,21 @@ export default function PokerTable() {
         console.log("[v0] Starting game with players:", allPlayerNames, "Seats:", seatNumbers)
         const smallBlind = selectedTable?.smallBlind || 10
         const bigBlind = selectedTable?.bigBlind || 20
-        const gameMode = selectedTable?.gameMode || "sng"
+        const gameMode = selectedTable?.gameMode || "cash"
         startGame(allPlayerIds, allPlayerNames, seatNumbers, smallBlind, bigBlind, selectedSeat, gameMode)
         setGameStarted(true)
       }, 1000)
 
       return () => clearTimeout(timer)
     }
-  }, [players, gameState, gameStarted, startGame, showLobby, selectedTable, selectedSeat])
+  }, [players, gameState, gameStarted, startGame, showLobby, selectedTable, selectedSeat, roomCode, isHost, myUserId])
+
+  // Client-side game transition when gameState is received
+  useEffect(() => {
+    if (gameState && !gameStarted) {
+      setGameStarted(true)
+    }
+  }, [gameState, gameStarted])
 
   const seatToPositionMap = useMemo<Record<number, string>>(() => ({
     1: "top",
