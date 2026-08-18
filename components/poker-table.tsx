@@ -120,15 +120,15 @@ export default function PokerTable() {
     }
 
     setLocalTimeLeft(turnDuration)
+    let timeLeft = turnDuration
+
     const interval = setInterval(() => {
-      setLocalTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval)
-          handleTimeUp()
-          return 0
-        }
-        return prev - 1
-      })
+      timeLeft -= 1
+      setLocalTimeLeft(timeLeft)
+      if (timeLeft <= 0) {
+        clearInterval(interval)
+        handleTimeUp()
+      }
     }, 1000)
 
     return () => clearInterval(interval)
