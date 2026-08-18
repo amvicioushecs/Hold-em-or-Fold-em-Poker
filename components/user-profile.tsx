@@ -10,9 +10,10 @@ import { cn } from "@/lib/utils"
 import StatsDashboard from "./stats-dashboard"
 import AchievementsPage from "./achievements-page"
 import GiftsPage from "./gifts-page"
+import type { UserProfile as UserProfileType } from "@/types/profile"
 
 interface UserProfileProps {
-  profile: any
+  profile: UserProfileType
   isOwnProfile?: boolean
   onClose?: () => void
 }

@@ -196,15 +196,15 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
   const getDifficultyColor = (difficulty: string): string => {
     switch (difficulty) {
       case "Beginner":
-        return "bg-chart-3/20 text-chart-3 border-chart-3/50"
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
       case "Intermediate":
-        return "bg-chart-2/20 text-chart-2 border-chart-2/50"
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20"
       case "Advanced":
-        return "bg-chart-5/20 text-chart-5 border-chart-5/50"
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20"
       case "Expert":
-        return "bg-destructive/20 text-destructive border-destructive/50"
+        return "bg-rose-500/10 text-rose-400 border-rose-500/20"
       default:
-        return "bg-muted/20 text-muted-foreground border-muted/50"
+        return "bg-slate-800 text-slate-400 border-slate-700"
     }
   }
 
@@ -249,15 +249,15 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
           "min-w-[280px] md:min-w-0",
           "backdrop-blur-sm",
           isSelected
-            ? "border-chart-4/70 bg-gradient-to-br from-chart-4/20 via-chart-5/10 to-chart-6/20 shadow-xl shadow-chart-4/20"
-            : "border-border/50 bg-gradient-to-br from-background/80 to-background/90 hover:border-chart-4/50 hover:shadow-lg hover:shadow-chart-4/10",
-          !canAfford && "border-destructive/50 bg-gradient-to-br from-destructive/20 to-background/90",
+            ? "border-[#FEB956] bg-gradient-to-br from-[#FEB956]/15 via-amber-500/5 to-slate-900/40 shadow-xl shadow-[#FEB956]/10"
+            : "border-slate-800 bg-gradient-to-br from-slate-900/90 to-slate-950/90 hover:border-[#FEB956]/50 hover:shadow-lg hover:shadow-[#FEB956]/5",
+          !canAfford && "border-red-950 bg-gradient-to-br from-red-950/20 to-slate-950/90",
         )}
       >
         {/* VIP Badge */}
         {table.isVip && (
           <div className="absolute top-2 right-2">
-            <Badge className="bg-gradient-to-r from-chart-4 to-chart-5 text-background border-0 text-xs font-bold shadow-lg">
+            <Badge className="bg-gradient-to-r from-[#FEB956] to-amber-500 text-slate-950 border-0 text-xs font-bold shadow-lg">
               <Lock className="w-3 h-3 mr-1" />
               VIP
             </Badge>
@@ -267,33 +267,33 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
         {/* Selected Indicator */}
         {isSelected && (
           <div className="absolute top-2 left-2">
-            <CheckCircle2 className="w-5 h-5 text-chart-4 drop-shadow-lg" />
+            <CheckCircle2 className="w-5 h-5 text-[#FEB956] drop-shadow-lg" />
           </div>
         )}
 
         {/* Table Name */}
-        <h3 className="text-base md:text-lg font-bold text-chart-4 mb-3 pr-12 drop-shadow-md">{table.name}</h3>
+        <h3 className={cn("text-base md:text-lg font-bold mb-3 pr-12 drop-shadow-md", isSelected ? "text-[#FEB956]" : "text-slate-100")}>{table.name}</h3>
 
         {/* Blinds */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs md:text-sm text-muted-foreground">Blinds:</span>
-          <span className="text-xs md:text-sm font-semibold text-chart-4">
+          <span className="text-xs md:text-sm text-slate-400">Blinds:</span>
+          <span className={cn("text-xs md:text-sm font-semibold", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
             {formatChips(table.smallBlind)}/{formatChips(table.bigBlind)}
           </span>
         </div>
 
         {/* Buy-in Range */}
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs md:text-sm text-muted-foreground">Buy-in:</span>
-          <span className="text-xs md:text-sm font-semibold text-chart-4">
+          <span className="text-xs md:text-sm text-slate-400">Buy-in:</span>
+          <span className={cn("text-xs md:text-sm font-semibold", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
             {formatChips(table.minBuyIn)} - {formatChips(table.maxBuyIn)}
           </span>
         </div>
 
         {/* Players */}
         <div className="flex items-center gap-2 mb-3">
-          <Users className="w-4 h-4 text-muted-foreground" />
-          <span className="text-xs md:text-sm text-foreground">
+          <Users className="w-4 h-4 text-slate-400" />
+          <span className="text-xs md:text-sm text-slate-300">
             {table.currentPlayers}/{table.maxPlayers} players
           </span>
           {isFull && (
@@ -335,25 +335,25 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
           "hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
           "flex flex-col gap-2 backdrop-blur-sm",
           isSelected
-            ? "border-chart-4/70 bg-gradient-to-r from-chart-4/20 to-chart-5/10 shadow-lg shadow-chart-4/20"
-            : "border-border/50 bg-gradient-to-r from-background/80 to-background/90 hover:border-chart-4/50",
-          !canAfford && "border-destructive/50 bg-gradient-to-r from-destructive/20 to-background/90",
+            ? "border-[#FEB956] bg-gradient-to-r from-[#FEB956]/15 to-slate-900/40 shadow-lg shadow-[#FEB956]/10"
+            : "border-slate-800 bg-gradient-to-r from-slate-900/90 to-slate-950/90 hover:border-[#FEB956]/50",
+          !canAfford && "border-red-950 bg-gradient-to-r from-red-950/20 to-slate-950/90",
         )}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              {isSelected && <CheckCircle2 className="w-4 h-4 text-chart-4 flex-shrink-0" />}
-              <h3 className="text-sm font-bold text-chart-4 truncate">{table.name}</h3>
+              {isSelected && <CheckCircle2 className="w-4 h-4 text-[#FEB956] flex-shrink-0" />}
+              <h3 className={cn("text-sm font-bold truncate", isSelected ? "text-[#FEB956]" : "text-slate-100")}>{table.name}</h3>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-chart-4 font-medium">
+              <span className={cn("font-medium", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
                 {formatChips(table.smallBlind)}/{formatChips(table.bigBlind)}
               </span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-muted-foreground">{formatChips(table.minBuyIn)} min</span>
-              <span className="text-muted-foreground">•</span>
-              <span className="text-foreground flex items-center gap-1">
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-400">{formatChips(table.minBuyIn)} min</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-300 flex items-center gap-1">
                 <Users className="w-3 h-3" />
                 {table.currentPlayers}/{table.maxPlayers}
               </span>
@@ -361,7 +361,7 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
           </div>
           <div className="flex flex-col items-end gap-1 flex-shrink-0">
             {table.isVip && (
-              <Badge className="bg-gradient-to-r from-chart-4 to-chart-5 text-background border-0 text-xs font-bold">
+              <Badge className="bg-gradient-to-r from-[#FEB956] to-amber-500 text-slate-950 border-0 text-xs font-bold">
                 VIP
               </Badge>
             )}
@@ -389,17 +389,17 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          "p-0 gap-0 bg-gradient-to-br from-background via-background to-background/80 border-border",
+          "p-0 gap-0 bg-gradient-to-br from-[#131a2e] via-[#111625] to-[#0f121d] border-slate-800 text-white",
           isMobile ? "w-full h-full max-w-full max-h-full m-0 rounded-none" : "max-w-4xl max-h-[90vh]",
         )}
       >
-        <DialogHeader className={cn("border-b border-border/50 bg-background/50", isMobile ? "p-4 pb-3" : "p-6 pb-4")}>
+        <DialogHeader className={cn("border-b border-slate-800/80 bg-slate-900/40", isMobile ? "p-4 pb-3" : "p-6 pb-4")}>
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <DialogTitle
-                className={cn("font-bold flex items-center gap-2 text-chart-4", isMobile ? "text-lg" : "text-2xl")}
+                className={cn("font-bold flex items-center gap-2 text-[#FEB956]", isMobile ? "text-lg" : "text-2xl")}
               >
-                <TrendingUp className={cn(isMobile ? "w-5 h-5" : "w-6 h-6", "text-chart-4 flex-shrink-0")} />
+                <TrendingUp className={cn(isMobile ? "w-5 h-5" : "w-6 h-6", "text-[#FEB956] flex-shrink-0")} />
                 <span className="truncate">
                   {isMobile
                     ? "Select Table"
@@ -413,23 +413,23 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
                     }`}
                 </span>
               </DialogTitle>
-              <div className="flex items-center gap-2 mt-2 text-xs md:text-sm text-muted-foreground">
-                <Coins className="w-4 h-4 flex-shrink-0 text-chart-4" />
+              <div className="flex items-center gap-2 mt-2 text-xs md:text-sm text-slate-400">
+                <Coins className="w-4 h-4 flex-shrink-0 text-[#FEB956]" />
                 <span>
-                  Your Chips: <span className="text-chart-4 font-semibold">{formatChips(playerChips)}</span>
+                  Your Chips: <span className="text-[#FEB956] font-semibold">{formatChips(playerChips)}</span>
                 </span>
               </div>
             </div>
             {isMobile && (
               <button
                 onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                className="p-2 rounded-lg bg-card/50 hover:bg-card border border-border/50 transition-colors"
+                className="p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900 border border-slate-800 transition-colors"
                 aria-label="Toggle view mode"
               >
                 {viewMode === "grid" ? (
-                  <List className="w-5 h-5 text-chart-4" />
+                  <List className="w-5 h-5 text-[#FEB956]" />
                 ) : (
-                  <Grid3x3 className="w-5 h-5 text-chart-4" />
+                  <Grid3x3 className="w-5 h-5 text-[#FEB956]" />
                 )}
               </button>
             )}
@@ -438,20 +438,20 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
 
         {/* Horizontal scroll view for mobile grid */}
         {isMobile && viewMode === "grid" ? (
-          <div className="relative flex-1 overflow-hidden bg-gradient-to-b from-background/50 to-background/30">
+          <div className="relative flex-1 overflow-hidden bg-gradient-to-b from-[#111625]/50 to-[#0f121d]/30">
             <button
               onClick={() => scroll("left")}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-card/90 backdrop-blur-sm border border-chart-4/30 shadow-lg hover:bg-card transition-colors"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-slate-900/90 backdrop-blur-sm border border-[#FEB956]/30 shadow-lg hover:bg-slate-850 transition-colors"
               aria-label="Scroll left"
             >
-              <ChevronLeft className="w-5 h-5 text-chart-4" />
+              <ChevronLeft className="w-5 h-5 text-[#FEB956]" />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-card/90 backdrop-blur-sm border border-chart-4/30 shadow-lg hover:bg-card transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-slate-900/90 backdrop-blur-sm border border-[#FEB956]/30 shadow-lg hover:bg-slate-850 transition-colors"
               aria-label="Scroll right"
             >
-              <ChevronRight className="w-5 h-5 text-chart-4" />
+              <ChevronRight className="w-5 h-5 text-[#FEB956]" />
             </button>
             <div
               ref={scrollRef}
@@ -480,17 +480,17 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
 
         <div
           className={cn(
-            "border-t border-border/50 bg-background/50 flex justify-between items-center gap-2",
+            "border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md flex justify-between items-center gap-2",
             isMobile ? "p-4 pt-3 flex-col" : "p-6 pt-4 flex-row",
           )}
         >
-          <div className={cn("text-xs md:text-sm text-muted-foreground", isMobile && "w-full text-center")}>
+          <div className={cn("text-xs md:text-sm text-slate-400", isMobile && "w-full text-center")}>
             {selectedTable ? (
               <div className="flex flex-wrap items-center justify-center gap-1">
-                <span className="font-semibold text-chart-4">{selectedTable.name}</span>
-                <span className="text-muted-foreground">•</span>
+                <span className="font-semibold text-[#FEB956]">{selectedTable.name}</span>
+                <span className="text-slate-600">•</span>
                 <span>
-                  Buy-in: <span className="text-chart-4 font-semibold">{formatChips(selectedTable.minBuyIn)}</span>
+                  Buy-in: <span className="text-[#FEB956] font-semibold">{formatChips(selectedTable.minBuyIn)}</span>
                 </span>
               </div>
             ) : (
@@ -501,7 +501,7 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
             <Button
               variant="outline"
               onClick={onClose}
-              className={cn("border-border hover:bg-card hover:border-border text-foreground", isMobile && "flex-1")}
+              className={cn("border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:text-white text-slate-300", isMobile && "flex-1")}
             >
               Cancel
             </Button>
@@ -509,7 +509,7 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
               onClick={handleConfirm}
               disabled={!selectedTable}
               className={cn(
-                "bg-chart-4 hover:bg-chart-4/90 text-primary font-bold shadow-lg disabled:opacity-50 disabled:bg-muted disabled:text-muted-foreground",
+                "bg-gradient-to-r from-[#FEB956] to-amber-500 hover:from-[#FEB956]/90 hover:to-amber-500/90 text-slate-950 font-extrabold shadow-lg disabled:opacity-50 disabled:bg-slate-800 disabled:text-slate-500",
                 isMobile ? "flex-1" : "min-w-32",
               )}
             >
@@ -521,3 +521,4 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
     </Dialog>
   )
 }
+
