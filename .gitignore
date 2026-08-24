@@ -1,6 +1,7 @@
-```
 # Build artifacts
+.next/
 *.tsbuildinfo
+next-env.d.ts
 
 # Dependencies
 node_modules/
@@ -8,56 +9,26 @@ node_modules/
 # Environment
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
 *.env.*
+.vercel
 
 # Editors
 .vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Compiled files
-*.o
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-*.out
-
-# Distribution / packaging
-dist/
-build/
-*.tar.gz
-*.zip
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# MyPy
-.mypy_cache/
-
-# PyTest
-.pytest_cache/
-
-# Gradle
-.gradle/
-
-# Target
-target/
-
-# Virtual environments
-venv/
-.venv/
-```
+# OS files
+.DS_Store
+Thumbs.db

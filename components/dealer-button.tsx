@@ -8,14 +8,13 @@ interface DealerButtonProps {
 }
 
 export default function DealerButton({ seatNumber, className }: DealerButtonProps) {
-  // Now positioned in a tighter circle closer to center of tables
   const positionClasses: Record<number, string> = {
-    1: "top-[28%] left-1/2 -translate-x-1/2", // Top - closer to table center
-    2: "top-[32%] right-[28%]", // Top-right - on table surface
-    3: "bottom-[32%] right-[28%]", // Bottom-right - on table surface
-    4: "bottom-[28%] left-1/2 -translate-x-1/2", // Bottom - closer to table center
-    5: "bottom-[32%] left-[28%]", // Bottom-left - on table surface
-    6: "top-[32%] left-[28%]", // Top-left - on table surface
+    1: "top-[16%] left-[62%] md:left-[64%]",
+    2: "top-[23%] right-[85px] md:right-[100px]",
+    3: "bottom-[23%] right-[85px] md:right-[100px]",
+    4: "bottom-[16%] left-[62%] md:left-[64%]",
+    5: "bottom-[23%] left-[85px] md:left-[100px]",
+    6: "top-[23%] left-[85px] md:left-[100px]",
   }
 
   return (

@@ -15,11 +15,11 @@ export default function PlayerTurnIndicator({ position, isActive, onTimeUp, dura
 
   // Position the timer indicator based on player position
   const positionClasses: Record<string, string> = {
-    top: "top-[-3rem] left-1/2 -translate-x-1/2",
-    "top-left": "top-[-3rem] left-0",
-    "top-right": "top-[-3rem] right-0",
-    "bottom-left": "bottom-[-3rem] left-0",
-    "bottom-right": "bottom-[-3rem] right-0",
+    top: "left-[105%] top-1/2 -translate-y-1/2 md:left-[110%]",
+    "top-left": "right-[105%] top-1/2 -translate-y-1/2 md:right-[110%]",
+    "top-right": "left-[105%] top-1/2 -translate-y-1/2 md:left-[110%]",
+    "bottom-left": "right-[105%] top-1/2 -translate-y-1/2 md:right-[110%]",
+    "bottom-right": "left-[105%] top-1/2 -translate-y-1/2 md:left-[110%]",
     bottom: "bottom-[-4rem] left-1/2 -translate-x-1/2",
   }
 
