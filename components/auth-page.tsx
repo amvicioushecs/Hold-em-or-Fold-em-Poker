@@ -12,6 +12,8 @@ interface AuthFormProps {
 
 function AuthForm({ mode }: AuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [consent, setConsent] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,18 +23,20 @@ function AuthForm({ mode }: AuthFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+    if (isSignup && formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match.")
+      return
+    }
+    if (isSignup && !consent) {
+      setError("Please agree to the Terms of Service and Privacy Policy to create an account.")
+      return
+    }
     setIsLoading(true)
-    
-    // TODO: Implement actual authentication logic
-    // For now, simulate successful auth after delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    
-    // In production, this would call your auth API and update global state
-    console.log(`${mode === 'login' ? 'Login' : 'Signup'} attempt:`, {
-      email: formData.email,
-      username: isSignup ? formData.username : undefined,
-    })
-    
+    // No authentication service is configured, so this must not claim to
+    // create a session or send credentials anywhere.
+    await Promise.resolve()
+    setError("Authentication is not available yet. You can continue as a guest.")
     setIsLoading(false)
   }
 
@@ -121,7 +125,14 @@ function AuthForm({ mode }: AuthFormProps) {
             className="h-12 text-base md:text-sm touch-manipulation active:scale-[0.99] transition-transform"
             autoComplete="new-password"
             required
+            aria-invalid={error === "Passwords do not match."}
+            aria-describedby={error === "Passwords do not match." ? "confirm-password-error" : undefined}
           />
+          {error === "Passwords do not match." && (
+            <p id="confirm-password-error" className="text-sm text-destructive">
+              Passwords do not match.
+            </p>
+          )}
         </div>
       )}
 
@@ -130,17 +141,45 @@ function AuthForm({ mode }: AuthFormProps) {
           <label className="flex items-center space-x-2 cursor-pointer touch-manipulation">
             <input
               type="checkbox"
+              disabled
               className="h-4 w-4 rounded border-gray-300 focus:ring-primary touch-manipulation"
             />
-            <span className="text-sm text-muted-foreground">Remember me</span>
+            <span className="text-sm text-muted-foreground">Remember me (unavailable)</span>
           </label>
           <button
             type="button"
+            disabled
+            aria-disabled="true"
             className="text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            Forgot password?
+            Forgot password? (unavailable)
           </button>
         </div>
+      )}
+
+      {isSignup && (
+        <label className="flex items-start gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            disabled={isLoading}
+            required
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 focus:ring-primary"
+          />
+          <span>
+            I agree to the{" "}
+            <a className="text-primary hover:underline" href="/terms">Terms of Service</a>{" "}
+            and{" "}
+            <a className="text-primary hover:underline" href="/privacy">Privacy Policy</a>.
+          </span>
+        </label>
+      )}
+
+      {error && error !== "Passwords do not match." && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <Button
@@ -163,14 +202,7 @@ function AuthForm({ mode }: AuthFormProps) {
 
       {isSignup && (
         <p className="text-xs text-muted-foreground text-center">
-          By creating an account, you agree to our{" "}
-          <button type="button" className="text-primary hover:underline">
-            Terms of Service
-          </button>{" "}
-          and{" "}
-          <button type="button" className="text-primary hover:underline">
-            Privacy Policy
-          </button>
+          Account creation is currently unavailable.
         </p>
       )}
     </form>
@@ -178,15 +210,6 @@ function AuthForm({ mode }: AuthFormProps) {
 }
 
 function SocialLogin() {
-  const handleSocialLogin = async (provider: string) => {
-    // TODO: Implement social login with actual OAuth flow
-    console.log(`Initiating ${provider} login...`)
-    
-    // In production, this would redirect to OAuth provider or open popup
-    // Example: window.location.href = `/api/auth/${provider}`
-    alert(`${provider} login coming soon!`)
-  }
-
   return (
     <div className="space-y-3">
       <div className="relative">
@@ -204,8 +227,9 @@ function SocialLogin() {
         <Button
           type="button"
           variant="outline"
+          disabled
+          aria-label="Google sign-in unavailable"
           className="h-12 touch-manipulation active:scale-[0.98] transition-transform"
-          onClick={() => handleSocialLogin("google")}
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -225,14 +249,15 @@ function SocialLogin() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Google
+          Google (unavailable)
         </Button>
 
         <Button
           type="button"
           variant="outline"
+          disabled
+          aria-label="Apple sign-in unavailable"
           className="h-12 touch-manipulation active:scale-[0.98] transition-transform"
-          onClick={() => handleSocialLogin("apple")}
         >
           <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -240,7 +265,7 @@ function SocialLogin() {
               d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
             />
           </svg>
-          Apple
+          Apple (unavailable)
         </Button>
       </div>
     </div>
@@ -251,7 +276,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login")
 
   return (
-    <div className="min-h-[100dvh] w-full flex items-center justify-center p-4 md:p-6 lg:p-8 bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="relative min-h-[100dvh] w-full flex items-center justify-center p-4 md:p-6 lg:p-8 bg-gradient-to-br from-background via-background to-muted/20">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
@@ -314,8 +339,8 @@ export default function AuthPage() {
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
           Protected by reCAPTCHA and subject to the{" "}
-          <button className="hover:underline">Privacy Policy</button> and{" "}
-          <button className="hover:underline">Terms of Service</button>.
+          <a className="hover:underline" href="/privacy">Privacy Policy</a> and{" "}
+          <a className="hover:underline" href="/terms">Terms of Service</a>.
         </p>
       </div>
     </div>

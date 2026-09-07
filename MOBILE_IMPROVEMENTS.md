@@ -23,17 +23,22 @@ After reviewing your poker game application, I've identified key areas for impro
 
 /* 1. Viewport Height Fix for Mobile Browsers */
 :root {
-  --vh: 100vh; /* Fallback */
-  --vh: 100dvh; /* Dynamic viewport height */
+  --vh: 100vh; /* Fallback for browsers without dynamic viewport units */
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --vh: 100dvh; /* Use the dynamic viewport when supported */
+  }
 }
 
 /* 2. Safe Area Insets for Notched Devices */
+/* Keep safe-area ownership in the fixed shell/top and bottom action bars;
+   do not also pad body, or the insets will be applied twice. */
 @supports (padding: max(0px)) {
-  body {
+  .app-shell {
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
@@ -95,10 +100,13 @@ select {
 #### Recommendations:
 
 ```tsx
-// Replace line 179-180
-<div className="relative w-full h-[100dvh] bg-background overflow-hidden">
-  // Use dynamic viewport height and prevent overscroll
-  <div className="relative w-full h-full min-h-[100dvh] max-h-[100dvh] bg-background overflow-hidden overscroll-none">
+{/* Replace lines 179-180; use the --vh fallback defined above. */}
+<div className="app-shell relative w-full h-[var(--vh)] bg-background overflow-hidden">
+  {/* Use dynamic viewport height and prevent overscroll. */}
+  <div className="relative w-full h-full min-h-[var(--vh)] max-h-[var(--vh)] bg-background overflow-hidden overscroll-none">
+    {/* ...table content... */}
+  </div>
+</div>
 
 // Improve top bar for mobile (line 181)
 <div className="absolute top-0 left-0 right-0 h-14 md:h-16 
@@ -288,8 +296,8 @@ const positionClasses: Record<string, string> = {
 // Better sheet content for mobile (line 82)
 <SheetContent side="right" 
   className="w-[85vw] sm:w-[400px] p-0 
-  flex flex-col h-[100dvh] 
-  safe-area-inset-right">
+  flex flex-col h-[var(--vh)]
+  pr-[env(safe-area-inset-right)]">
 
 // Improve message readability (line 105-118)
 <div
@@ -387,19 +395,8 @@ const buttonVariants = cva(
 /* Add to globals.css */
 @layer base {
   html {
-    font-size: 14px; /* Base size for mobile */
-  }
-  
-  @media (min-width: 640px) {
-    html {
-      font-size: 15px;
-    }
-  }
-  
-  @media (min-width: 768px) {
-    html {
-      font-size: 16px;
-    }
+    /* Keep rem-based Tailwind sizes aligned with 16px touch-target guidance. */
+    font-size: 16px;
   }
   
   @media (min-width: 1024px) {
@@ -441,14 +438,23 @@ const MemoizedCommunityCards = React.memo(CommunityCards)
 ### 6.2 Optimize Images
 
 ```tsx
-// Add loading optimization to all Image components
+// Prioritize only images visible at initial render.
 <Image
   src="/logo.png"
   alt="Logo"
   width={200}
   height={200}
-  loading="eager" // For above-fold images
-  priority // Critical images
+  priority
+  className="..."
+/>
+
+// Defer images below the fold.
+<Image
+  src="/table-background.png"
+  alt="Poker table background"
+  width={1200}
+  height={800}
+  loading="lazy"
   className="..."
 />
 ```
@@ -519,7 +525,7 @@ const MemoizedCommunityCards = React.memo(CommunityCards)
 ## 9. Priority Implementation Order
 
 ### Phase 1 (Critical - Week 1):
-1. Fix viewport height issues (`100dvh`)
+1. Fix viewport height issues (use the `--vh` fallback/dynamic variable)
 2. Add safe-area insets for notched devices
 3. Increase touch target sizes globally
 4. Improve action button layout on mobile
@@ -552,7 +558,7 @@ const MemoizedCommunityCards = React.memo(CommunityCards)
 
 These changes will have immediate impact with minimal effort:
 
-1. **Change `h-screen` to `h-[100dvh]`** in main containers
+1. **Change `h-screen` to `h-[var(--vh)]`** in main containers
 2. **Add `touch-manipulation`** to all interactive elements
 3. **Increase button sizes** by 2-4px in height
 4. **Add `active:scale-95`** to buttons for tactile feedback
