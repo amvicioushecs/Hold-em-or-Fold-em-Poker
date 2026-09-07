@@ -11,9 +11,9 @@ interface AuthFormProps {
 }
 
 function AuthForm({ mode }: AuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [consent, setConsent] = useState(false)
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,26 +21,29 @@ function AuthForm({ mode }: AuthFormProps) {
     username: "",
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     if (isSignup && formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.")
+      setConfirmPasswordTouched(true)
+      setError("Please make sure both password fields match.")
       return
     }
     if (isSignup && !consent) {
       setError("Please agree to the Terms of Service and Privacy Policy to create an account.")
       return
     }
-    setIsLoading(true)
     // No authentication service is configured, so this must not claim to
     // create a session or send credentials anywhere.
-    await Promise.resolve()
     setError("Authentication is not available yet. You can continue as a guest.")
-    setIsLoading(false)
   }
 
   const isSignup = mode === "signup"
+  const passwordMismatch =
+    isSignup &&
+    confirmPasswordTouched &&
+    formData.confirmPassword.length > 0 &&
+    formData.password !== formData.confirmPassword
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +61,6 @@ function AuthForm({ mode }: AuthFormProps) {
             placeholder="Choose a username"
             value={formData.username}
             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-            disabled={isLoading}
             className="h-12 text-base md:text-sm touch-manipulation active:scale-[0.99] transition-transform"
             autoComplete="username"
             required
@@ -79,7 +81,6 @@ function AuthForm({ mode }: AuthFormProps) {
           placeholder="name@example.com"
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          disabled={isLoading}
           className="h-12 text-base md:text-sm touch-manipulation active:scale-[0.99] transition-transform"
           autoComplete={isSignup ? "email" : "username"}
           required
@@ -99,7 +100,6 @@ function AuthForm({ mode }: AuthFormProps) {
           placeholder={isSignup ? "Create a password" : "Enter your password"}
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          disabled={isLoading}
           className="h-12 text-base md:text-sm touch-manipulation active:scale-[0.99] transition-transform"
           autoComplete={isSignup ? "new-password" : "current-password"}
           required
@@ -120,15 +120,18 @@ function AuthForm({ mode }: AuthFormProps) {
             type="password"
             placeholder="Confirm your password"
             value={formData.confirmPassword}
-            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-            disabled={isLoading}
+            onChange={(e) => {
+              setFormData({ ...formData, confirmPassword: e.target.value })
+              if (confirmPasswordTouched) setError("")
+            }}
             className="h-12 text-base md:text-sm touch-manipulation active:scale-[0.99] transition-transform"
             autoComplete="new-password"
             required
-            aria-invalid={error === "Passwords do not match."}
-            aria-describedby={error === "Passwords do not match." ? "confirm-password-error" : undefined}
+            onBlur={() => setConfirmPasswordTouched(true)}
+            aria-invalid={passwordMismatch}
+            aria-describedby={passwordMismatch ? "confirm-password-error" : undefined}
           />
-          {error === "Passwords do not match." && (
+          {passwordMismatch && (
             <p id="confirm-password-error" className="text-sm text-destructive">
               Passwords do not match.
             </p>
@@ -163,7 +166,6 @@ function AuthForm({ mode }: AuthFormProps) {
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            disabled={isLoading}
             required
             className="mt-0.5 h-4 w-4 rounded border-gray-300 focus:ring-primary"
           />
@@ -176,7 +178,7 @@ function AuthForm({ mode }: AuthFormProps) {
         </label>
       )}
 
-      {error && error !== "Passwords do not match." && (
+      {error && !passwordMismatch && (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
@@ -185,19 +187,8 @@ function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="submit"
         className="w-full h-12 text-base font-semibold touch-manipulation active:scale-[0.98] transition-transform"
-        disabled={isLoading}
       >
-        {isLoading ? (
-          <span className="flex items-center justify-center gap-2">
-            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            {isSignup ? "Creating account..." : "Signing in..."}
-          </span>
-        ) : (
-          isSignup ? "Create Account" : "Sign In"
-        )}
+        {isSignup ? "Create Account" : "Sign In"}
       </Button>
 
       {isSignup && (

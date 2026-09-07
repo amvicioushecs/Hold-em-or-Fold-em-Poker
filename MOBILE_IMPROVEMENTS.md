@@ -23,22 +23,27 @@ After reviewing your poker game application, I've identified key areas for impro
 
 /* 1. Viewport Height Fix for Mobile Browsers */
 :root {
-  --vh: 100vh; /* Fallback for browsers without dynamic viewport units */
+  /* Stable fallback; older 100vh can include the browser toolbar and overflow. */
+  --vh: 100svh;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
 }
 
 @supports (height: 100dvh) {
   :root {
-    --vh: 100dvh; /* Use the dynamic viewport when supported */
+    --vh: 100dvh; /* Track browser-toolbar changes when supported */
   }
 }
 
-/* 2. Safe Area Insets for Notched Devices */
-/* Keep safe-area ownership in the fixed shell/top and bottom action bars;
-   do not also pad body, or the insets will be applied twice. */
+/* 2. Safe Area Insets for Notched Devices
+   The full-screen shell is the sole owner of all safe-area padding.
+   Do not repeat these env() values on nested bars, sheets, or the body. */
 @supports (padding: max(0px)) {
   .app-shell {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    padding: var(--safe-area-top) var(--safe-area-right)
+      var(--safe-area-bottom) var(--safe-area-left);
   }
 }
 
@@ -100,47 +105,42 @@ select {
 #### Recommendations:
 
 ```tsx
-{/* Replace lines 179-180; use the --vh fallback defined above. */}
+// Replace lines 179-180; the shell owns viewport and safe-area padding.
 <div className="app-shell relative w-full h-[var(--vh)] bg-background overflow-hidden">
-  {/* Use dynamic viewport height and prevent overscroll. */}
+  {/* Use the dynamic viewport height and prevent overscroll. */}
   <div className="relative w-full h-full min-h-[var(--vh)] max-h-[var(--vh)] bg-background overflow-hidden overscroll-none">
-    {/* ...table content... */}
+    {/* Improve top bar for mobile (line 181). Insets come from .app-shell. */}
+    <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-background/90 backdrop-blur-md border-b border-border z-40 flex items-center justify-between px-3 md:px-4">
+      {/* Header content */}
+    </div>
+
+    {/* Better responsive table sizing (line 225). */}
+    <div className="relative w-full h-full flex items-center justify-center p-2 pb-24 md:p-4 md:pb-28 bg-background">
+      <div className="relative w-full max-w-5xl aspect-square md:aspect-[16/9] flex items-center justify-center">
+        {/* Poker table content */}
+      </div>
+    </div>
+
+    {/* Improved action buttons layout (line 322-323). */}
+    <div className="absolute bottom-0 left-0 right-0 px-3 z-40 md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:px-0">
+      <div className="flex gap-2 md:gap-4 justify-center items-stretch min-h-11">
+        {/* Action buttons */}
+      </div>
+    </div>
+
+    {/* Make gift button more accessible on mobile (line 326-333). */}
+    {gameState && localPlayerState && (
+      <div className="absolute bottom-36 md:bottom-40 left-3 md:left-4 z-50">
+        <GiftButton
+          playerChips={localPlayerChips}
+          variant="secondary"
+          size="icon"
+          className="w-14 h-14 md:w-12 md:h-12 rounded-full shadow-2xl ring-2 ring-border touch-manipulation"
+        />
+      </div>
+    )}
   </div>
 </div>
-
-// Improve top bar for mobile (line 181)
-<div className="absolute top-0 left-0 right-0 h-14 md:h-16 
-  pt-[env(safe-area-inset-top)] 
-  bg-background/90 backdrop-blur-md border-b border-border z-40 
-  flex items-center justify-between px-3 md:px-4">
-
-// Better responsive table sizing (line 225)
-<div className="relative w-full h-full flex items-center justify-center 
-  p-2 pb-24 md:p-4 md:pb-28 
-  bg-background">
-  
-  {/* Poker Table */}
-  <div className="relative w-full max-w-5xl aspect-square md:aspect-[16/9] 
-    flex items-center justify-center">
-
-// Improved action buttons layout (line 322-323)
-<div className="absolute bottom-0 left-0 right-0 px-3 pb-[env(safe-area-inset-bottom)] 
-  z-40 md:bottom-4 md:left-1/2 md:-translate-x-1/2 md:px-0 md:pb-0">
-  <div className="flex gap-2 md:gap-4 justify-center items-stretch 
-    min-h-[calc(44px+env(safe-area-inset-bottom))]">
-
-// Make gift button more accessible on mobile (line 326-333)
-{gameState && localPlayerState && (
-  <div className="absolute bottom-36 md:bottom-40 left-3 md:left-4 z-50">
-    <GiftButton
-      playerChips={localPlayerChips}
-      variant="secondary"
-      size="icon"
-      className="w-14 h-14 md:w-12 md:h-12 rounded-full shadow-2xl 
-        ring-2 ring-border touch-manipulation"
-    />
-  </div>
-)}
 ```
 
 ### 2.2 Player Position Component (`player-position.tsx`)
@@ -212,7 +212,7 @@ const positionClasses: Record<string, string> = {
 // Improve header bar for mobile (line 80)
 <div className="flex items-center justify-between 
   p-2 md:p-4 
-  pt-[max(0.5rem,env(safe-area-inset-top))]
+  pt-2 md:pt-4
   border-b border-border/50 
   backdrop-blur-md bg-[rgba(29,30,40,0.95)]">
 
@@ -296,8 +296,8 @@ const positionClasses: Record<string, string> = {
 // Better sheet content for mobile (line 82)
 <SheetContent side="right" 
   className="w-[85vw] sm:w-[400px] p-0 
-  flex flex-col h-[var(--vh)]
-  pr-[env(safe-area-inset-right)]">
+  flex flex-col h-[var(--vh)]">
+  {/* If outside .app-shell, use --safe-area-right here as the sole owner. */}
 
 // Improve message readability (line 105-118)
 <div
@@ -395,26 +395,24 @@ const buttonVariants = cva(
 /* Add to globals.css */
 @layer base {
   html {
-    /* Keep rem-based Tailwind sizes aligned with 16px touch-target guidance. */
+    /* Keep rem-based Tailwind sizes aligned with 16px touch-target guidance
+       on mobile as well as desktop. Do not scale the root below 16px. */
     font-size: 16px;
   }
-  
-  @media (min-width: 1024px) {
-    html {
-      font-size: 16px;
-    }
-  }
-  
-  /* Fluid typography for headings */
-  h1 {
+}
+
+/* Scope fluid typography to selected content instead of changing every
+   heading globally. The html root remains 16px for rem-based controls. */
+@layer components {
+  .fluid-heading-1 {
     font-size: clamp(1.5rem, 4vw, 2.25rem);
   }
-  
-  h2 {
+
+  .fluid-heading-2 {
     font-size: clamp(1.25rem, 3vw, 1.875rem);
   }
-  
-  h3 {
+
+  .fluid-heading-3 {
     font-size: clamp(1.125rem, 2.5vw, 1.5rem);
   }
 }
@@ -438,7 +436,7 @@ const MemoizedCommunityCards = React.memo(CommunityCards)
 ### 6.2 Optimize Images
 
 ```tsx
-// Prioritize only images visible at initial render.
+// Prioritize only the above-the-fold image visible at initial render.
 <Image
   src="/logo.png"
   alt="Logo"
@@ -448,7 +446,7 @@ const MemoizedCommunityCards = React.memo(CommunityCards)
   className="..."
 />
 
-// Defer images below the fold.
+// Defer every image below the fold; do not mark these as priority.
 <Image
   src="/table-background.png"
   alt="Poker table background"

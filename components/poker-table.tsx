@@ -48,8 +48,6 @@ export default function PokerTable() {
     if (players.size >= 2 && !gameState && !gameStarted && !showLobby) {
       const timer = setTimeout(() => {
         const allPlayerIds = Array.from(players.keys())
-        const allPlayerNames = Array.from(players.values()).map((p) => p.name)
-
         // Assign seat numbers (local player gets selectedSeat, others get remaining seats)
         const seatNumbers: number[] = []
         const availableSeats = [1, 2, 3, 4, 5, 6].filter((s) => s !== selectedSeat)
@@ -62,10 +60,10 @@ export default function PokerTable() {
           }
         })
 
-        console.log("[v0] Starting game with players:", allPlayerNames, "Seats:", seatNumbers)
         const smallBlind = selectedTable?.smallBlind || 10
         const bigBlind = selectedTable?.bigBlind || 20
         const gameMode = selectedTable?.gameMode || "sng"
+        const allPlayerNames = Array.from(players.values()).map((p) => p.name)
         startGame(allPlayerIds, allPlayerNames, seatNumbers, smallBlind, bigBlind, selectedSeat, gameMode)
         setGameStarted(true)
       }, 1000)
