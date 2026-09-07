@@ -6,7 +6,7 @@ import AuthPage from "@/components/auth-page"
 
 export default function Home() {
   // TODO: Replace with actual authentication state
-  const isAuthenticated = true
+  const isAuthenticated = false
   
   if (!isAuthenticated) {
     return <AuthPage />
