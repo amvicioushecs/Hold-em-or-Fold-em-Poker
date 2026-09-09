@@ -1,13 +1,14 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import type { TournamentState, TournamentConfig } from "@/types/tournament"
 import { tournamentEngine } from "@/lib/tournament-engine"
 
 interface TournamentContextType {
   tournament: TournamentState | null
-  createTournament: (config: TournamentConfig) => void
-  registerPlayer: (playerId: string, playerName: string) => boolean
+  createTournament: (config: TournamentConfig) => TournamentState
+  registerPlayer: (playerId: string, playerName: string, tournamentId?: string) => boolean
+  createAndRegister: (config: TournamentConfig, playerId: string, playerName: string) => boolean
   startTournament: () => boolean
   eliminatePlayer: (playerId: string) => void
   currentBlindLevel: any
@@ -21,6 +22,14 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const [currentBlindLevel, setCurrentBlindLevel] = useState<any>(null)
   const [timeUntilNextLevel, setTimeUntilNextLevel] = useState<string>("")
 
+  const refreshTournament = useCallback((tournamentId: string) => {
+    const updated = tournamentEngine.getTournament(tournamentId)
+    if (updated) {
+      setTournament({ ...updated })
+    }
+    return updated
+  }, [])
+
   // Timer effect for blind levels
   useEffect(() => {
     if (!tournament || tournament.phase !== "running") return
@@ -28,17 +37,14 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     const interval = setInterval(() => {
       if (tournament.config.id) {
         tournamentEngine.updateTimer(tournament.config.id, 1)
-        const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-        if (updatedTournament) {
-          setTournament({ ...updatedTournament })
-        }
+        refreshTournament(tournament.config.id)
       }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [tournament])
+  }, [tournament?.config.id, tournament?.phase, refreshTournament])
 
-  // Update time display
+  // Update time display + current blind level
   useEffect(() => {
     if (!tournament) return
 
@@ -51,43 +57,68 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     setCurrentBlindLevel(blindLevel)
   }, [tournament])
 
-  const createTournament = (config: TournamentConfig) => {
-    const newTournament = tournamentEngine.createTournament(config)
-    setTournament(newTournament)
-  }
+  const createTournament = useCallback(
+    (config: TournamentConfig): TournamentState => {
+      const newTournament = tournamentEngine.createTournament(config)
+      setTournament(newTournament)
+      return newTournament
+    },
+    [],
+  )
 
-  const registerPlayer = (playerId: string, playerName: string): boolean => {
-    if (!tournament) return false
-    const success = tournamentEngine.registerPlayer(tournament.config.id, playerId, playerName)
-    if (success) {
-      const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-      if (updatedTournament) {
-        setTournament({ ...updatedTournament })
+  /**
+   * Register a player. Pass tournamentId to avoid React state race
+   * right after createTournament().
+   */
+  const registerPlayer = useCallback(
+    (playerId: string, playerName: string, tournamentId?: string): boolean => {
+      const id = tournamentId || tournament?.config.id
+      if (!id) return false
+
+      const success = tournamentEngine.registerPlayer(id, playerId, playerName)
+      if (success) {
+        refreshTournament(id)
       }
-    }
-    return success
-  }
+      return success
+    },
+    [tournament?.config.id, refreshTournament],
+  )
 
-  const startTournament = (): boolean => {
+  /**
+   * Atomic create + register used by MTT / SNG lobby pages.
+   * Registration happens entirely on those pages.
+   */
+  const createAndRegister = useCallback(
+    (config: TournamentConfig, playerId: string, playerName: string): boolean => {
+      const created = tournamentEngine.createTournament(config)
+      setTournament(created)
+
+      const success = tournamentEngine.registerPlayer(config.id, playerId, playerName)
+      if (success) {
+        refreshTournament(config.id)
+      }
+      return success
+    },
+    [refreshTournament],
+  )
+
+  const startTournament = useCallback((): boolean => {
     if (!tournament) return false
     const success = tournamentEngine.startTournament(tournament.config.id)
     if (success) {
-      const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-      if (updatedTournament) {
-        setTournament({ ...updatedTournament })
-      }
+      refreshTournament(tournament.config.id)
     }
     return success
-  }
+  }, [tournament, refreshTournament])
 
-  const eliminatePlayer = (playerId: string) => {
-    if (!tournament) return
-    tournamentEngine.eliminatePlayer(tournament.config.id, playerId)
-    const updatedTournament = tournamentEngine.getTournament(tournament.config.id)
-    if (updatedTournament) {
-      setTournament({ ...updatedTournament })
-    }
-  }
+  const eliminatePlayer = useCallback(
+    (playerId: string) => {
+      if (!tournament) return
+      tournamentEngine.eliminatePlayer(tournament.config.id, playerId)
+      refreshTournament(tournament.config.id)
+    },
+    [tournament, refreshTournament],
+  )
 
   return (
     <TournamentContext.Provider
@@ -95,6 +126,7 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
         tournament,
         createTournament,
         registerPlayer,
+        createAndRegister,
         startTournament,
         eliminatePlayer,
         currentBlindLevel,
