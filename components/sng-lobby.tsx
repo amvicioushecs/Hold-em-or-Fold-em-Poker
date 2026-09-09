@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle } from "lucide-react"
+import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle, Zap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { TournamentConfig } from "@/types/tournament"
 import { useTournament } from "@/hooks/use-tournament"
@@ -28,6 +28,8 @@ const BOT_NAMES = [
 
 export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
   const [availableTournaments, setAvailableTournaments] = useState<TournamentConfig[]>([])
+  const [autoStart, setAutoStart] = useState(true)
+  const autoStartTriggered = useRef(false)
   const { tournament, createAndRegister, registerPlayer, startTournament } = useTournament()
 
   useEffect(() => {
@@ -89,6 +91,12 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
     setAvailableTournaments(templates)
   }, [])
 
+  useEffect(() => {
+    if (!tournament || tournament.phase === "running" || tournament.phase === "completed") {
+      autoStartTriggered.current = false
+    }
+  }, [tournament?.config.id, tournament?.phase])
+
   // Auto-fill SNG with bots on the SNG page
   useEffect(() => {
     if (!tournament || tournament.phase !== "registration") return
@@ -105,14 +113,42 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
     return () => clearTimeout(timer)
   }, [tournament, registerPlayer])
 
+  const canStart =
+    !!tournament &&
+    tournament.config.id.startsWith("sng-") &&
+    tournament.registeredPlayers.length >= tournament.config.minPlayers &&
+    tournament.phase === "registration"
+
+  // Auto-start when table is full / min reached
+  useEffect(() => {
+    if (!autoStart || !canStart || !tournament) return
+    if (autoStartTriggered.current) return
+
+    autoStartTriggered.current = true
+
+    const timer = setTimeout(() => {
+      if (startTournament()) {
+        onStart(tournament.config.id)
+      } else {
+        autoStartTriggered.current = false
+      }
+    }, 600)
+
+    return () => clearTimeout(timer)
+  }, [autoStart, canStart, tournament, startTournament, onStart])
+
   const handleRegister = (config: TournamentConfig) => {
+    autoStartTriggered.current = false
     createAndRegister(config, "local", "You")
   }
 
   const handleStartTournament = () => {
     if (!tournament) return
+    autoStartTriggered.current = true
     if (startTournament()) {
       onStart(tournament.config.id)
+    } else {
+      autoStartTriggered.current = false
     }
   }
 
@@ -141,16 +177,50 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
 
       <ScrollArea className="h-[calc(100vh-80px)]">
         <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between rounded-xl border border-slate-700 bg-slate-900/60 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-400">
+                <Zap className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Auto-start</p>
+                <p className="text-xs text-slate-400">Start when the table is full</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={autoStart}
+              onClick={() => setAutoStart((v) => !v)}
+              className={cn(
+                "relative h-7 w-12 rounded-full transition-colors",
+                autoStart ? "bg-emerald-500" : "bg-slate-600",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
+                  autoStart && "translate-x-5",
+                )}
+              />
+            </button>
+          </div>
+
           {tournament && tournament.config.id.startsWith("sng-") && (
             <div className="bg-gradient-to-br from-blue-900/50 to-emerald-900/50 rounded-2xl p-6 border-2 border-emerald-500">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">{tournament.config.name}</h2>
-                  <Badge className="bg-green-500 text-white animate-pulse">
-                    {tournament.registeredPlayers.length === tournament.config.maxPlayers
-                      ? "Ready to Start"
-                      : "Filling Table..."}
-                  </Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="bg-green-500 text-white animate-pulse">
+                      {tournament.registeredPlayers.length === tournament.config.maxPlayers
+                        ? "Ready to Start"
+                        : "Filling Table..."}
+                    </Badge>
+                    {autoStart && canStart && (
+                      <Badge className="bg-amber-500 text-black animate-pulse">Auto-starting…</Badge>
+                    )}
+                  </div>
                 </div>
                 <Trophy className="w-12 h-12 text-yellow-400" />
               </div>
@@ -177,17 +247,21 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                 <span className="text-yellow-400 font-bold text-xl">{formatNumber(tournament.totalPrizePool)}</span>
               </div>
 
-              {tournament.registeredPlayers.length >= tournament.config.minPlayers ? (
+              {canStart ? (
                 <Button
                   onClick={handleStartTournament}
-                  className="w-full h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold text-lg"
+                  disabled={autoStart && autoStartTriggered.current}
+                  className="w-full h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold text-lg disabled:opacity-70"
                 >
-                  Start SNG Game
+                  {autoStart ? "Starting…" : "Start SNG Game"}
                 </Button>
               ) : (
                 <div className="flex items-center gap-2 text-orange-400 text-sm">
                   <AlertCircle className="w-4 h-4 animate-bounce" />
-                  <span>Waiting for players to join...</span>
+                  <span>
+                    Waiting for players to join...
+                    {autoStart ? " (auto-start on)" : ""}
+                  </span>
                 </div>
               )}
             </div>
