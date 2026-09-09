@@ -1,4 +1,4 @@
-export type TournamentPhase = "registration" | "late-registration" | "running" | "final-table" | "completed"
+export type TournamentPhase = "registration" | "late-registration" | "running" | "final-table" | "completed" | "cancelled"
 
 export interface BlindLevel {
   level: number
@@ -20,6 +20,11 @@ export interface TournamentConfig {
   lateRegistrationMinutes: number
   blindStructure: BlindLevel[]
   prizePoolPercentages: number[] // e.g., [50, 30, 20] for top 3
+  /**
+   * When set, the tournament is scheduled and should only auto-start at this time
+   * if minPlayers are registered. ISO string or epoch ms.
+   */
+  scheduledStartTime?: string | number
 }
 
 export interface TournamentPlayer {
