@@ -8,20 +8,29 @@ import { ArrowLeft, Users, Clock, Trophy, Coins, AlertCircle } from "lucide-reac
 import { cn } from "@/lib/utils"
 import type { TournamentConfig } from "@/types/tournament"
 import { useTournament } from "@/hooks/use-tournament"
-import { tournamentEngine, TournamentEngine } from "@/lib/tournament-engine"
+import { TournamentEngine } from "@/lib/tournament-engine"
 
 interface SngLobbyProps {
   onClose: () => void
   onStart: (tournamentId: string) => void
 }
 
+const BOT_NAMES = [
+  "Daniel Negreanu",
+  "Phil Ivey",
+  "Doyle Brunson",
+  "Phil Hellmuth",
+  "Fedora Phil",
+  "Antonio Esfandiari",
+  "Gus Hansen",
+  "Vanessa Selbst",
+]
+
 export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
   const [availableTournaments, setAvailableTournaments] = useState<TournamentConfig[]>([])
-  const [selectedTournament, setSelectedTournament] = useState<TournamentConfig | null>(null)
-  const { tournament, createTournament, registerPlayer, startTournament } = useTournament()
+  const { tournament, createAndRegister, registerPlayer, startTournament } = useTournament()
 
   useEffect(() => {
-    // Create SNG templates
     const templates: TournamentConfig[] = [
       {
         id: "sng-heads-up",
@@ -80,53 +89,41 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
     setAvailableTournaments(templates)
   }, [])
 
-  // Auto-fill SNG players with bots for instant testing
+  // Auto-fill SNG with bots on the SNG page
   useEffect(() => {
     if (!tournament || tournament.phase !== "registration") return
     if (!tournament.config.id.startsWith("sng-")) return
 
-    const bots = ["Daniel Negreanu", "Phil Ivey", "Doyle Brunson", "Phil Hellmuth", "Fedora Phil", "Antonio Esfandiari", "Gus Hansen", "Vanessa Selbst"]
-    
-    // Register bots one by one every 800ms to simulate live lobby fills
     const currentCount = tournament.registeredPlayers.length
-    if (currentCount < tournament.config.maxPlayers) {
-      const timer = setTimeout(() => {
-        const botName = bots[currentCount - 1] || `Player ${currentCount}`
-        registerPlayer(`bot-${currentCount}`, botName)
-      }, 800)
-      return () => clearTimeout(timer)
-    }
+    if (currentCount >= tournament.config.maxPlayers) return
+
+    const timer = setTimeout(() => {
+      const botName = BOT_NAMES[currentCount - 1] || `Player ${currentCount}`
+      registerPlayer(`bot-${currentCount}`, botName, tournament.config.id)
+    }, 800)
+
+    return () => clearTimeout(timer)
   }, [tournament, registerPlayer])
 
   const handleRegister = (config: TournamentConfig) => {
-    if (tournament) {
-      // Clean up previous registration
-      tournamentEngine.eliminatePlayer(tournament.config.id, "local")
-    }
-
-    createTournament(config)
-    registerPlayer("local", "You")
-    setSelectedTournament(config)
+    createAndRegister(config, "local", "You")
   }
 
   const handleStartTournament = () => {
+    if (!tournament) return
     if (startTournament()) {
-      onStart(tournament!.config.id)
+      onStart(tournament.config.id)
     }
   }
 
   const formatNumber = (num: number): string => {
-    if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}M`
-    } else if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}K`
-    }
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`
     return num.toString()
   }
 
   return (
     <div className="relative w-full h-[100dvh] bg-gradient-to-b from-gray-900 to-black">
-      {/* Header */}
       <div className="relative z-20 bg-black/90 backdrop-blur-sm border-b border-gray-700">
         <div className="flex items-center justify-between p-4">
           <Button
@@ -144,20 +141,20 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
 
       <ScrollArea className="h-[calc(100vh-80px)]">
         <div className="p-4 space-y-4">
-          {/* Registered Tournament Status */}
-          {tournament && selectedTournament && (
+          {tournament && tournament.config.id.startsWith("sng-") && (
             <div className="bg-gradient-to-br from-blue-900/50 to-emerald-900/50 rounded-2xl p-6 border-2 border-emerald-500">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-2">{tournament.config.name}</h2>
                   <Badge className="bg-green-500 text-white animate-pulse">
-                    {tournament.registeredPlayers.length === tournament.config.maxPlayers ? "Ready to Start" : "Filling Table..."}
+                    {tournament.registeredPlayers.length === tournament.config.maxPlayers
+                      ? "Ready to Start"
+                      : "Filling Table..."}
                   </Badge>
                 </div>
                 <Trophy className="w-12 h-12 text-yellow-400" />
               </div>
 
-              {/* Registration Progress */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white font-semibold">Players Joined</span>
@@ -175,32 +172,27 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                 </div>
               </div>
 
-              {/* Prize Pool */}
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-300">Total Prize Pool:</span>
                 <span className="text-yellow-400 font-bold text-xl">{formatNumber(tournament.totalPrizePool)}</span>
               </div>
 
-              {/* Start Button */}
-              {tournament.registeredPlayers.length >= tournament.config.minPlayers && (
+              {tournament.registeredPlayers.length >= tournament.config.minPlayers ? (
                 <Button
                   onClick={handleStartTournament}
                   className="w-full h-14 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold text-lg"
                 >
                   Start SNG Game
                 </Button>
-              )}
-
-              {tournament.registeredPlayers.length < tournament.config.minPlayers && (
+              ) : (
                 <div className="flex items-center gap-2 text-orange-400 text-sm">
                   <AlertCircle className="w-4 h-4 animate-bounce" />
-                  <span>Waiting for bots to join...</span>
+                  <span>Waiting for players to join...</span>
                 </div>
               )}
             </div>
           )}
 
-          {/* Available Tournaments */}
           <div className="space-y-3">
             {availableTournaments.map((config) => {
               const isRegistered = tournament?.config.id === config.id
@@ -214,7 +206,6 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                     isRegistered ? "border-emerald-500 ring-2 ring-emerald-400/50" : "border-gray-700",
                   )}
                 >
-                  {/* Tournament Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-1">{config.name}</h3>
@@ -228,7 +219,6 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                     <Trophy className="w-8 h-8 text-yellow-400" />
                   </div>
 
-                  {/* Tournament Stats Grid */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="bg-black/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 mb-1">
@@ -263,7 +253,6 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                     </div>
                   </div>
 
-                  {/* Prize Structure */}
                   <div className="mb-4">
                     <p className="text-xs text-gray-400 mb-2">Prize Structure:</p>
                     <div className="grid grid-cols-3 sm:flex gap-2">
@@ -276,17 +265,14 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
                     </div>
                   </div>
 
-                  {/* Register Button */}
-                  {!isRegistered && (
+                  {!isRegistered ? (
                     <Button
                       onClick={() => handleRegister(config)}
                       className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold"
                     >
                       Join SNG Table
                     </Button>
-                  )}
-
-                  {isRegistered && (
+                  ) : (
                     <div className="text-center py-3">
                       <Badge className="bg-emerald-500 text-white text-sm px-4 py-2">✓ Joined</Badge>
                     </div>
@@ -296,7 +282,6 @@ export default function SngLobby({ onClose, onStart }: SngLobbyProps) {
             })}
           </div>
 
-          {/* Bottom Padding */}
           <div className="h-8" />
         </div>
       </ScrollArea>
