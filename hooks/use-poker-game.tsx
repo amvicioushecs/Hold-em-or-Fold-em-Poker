@@ -76,7 +76,7 @@ export function PokerGameProvider({ children }: { children: ReactNode }) {
       sbAmount = 10,
       bbAmount = 20,
       dealerSeat = 1,
-      gameMode: GameMode = "sng",
+      gameMode: GameMode = "cash", // Fixed: was "sng"
     ) => {
       if (playerIds.length < 2) {
         return
