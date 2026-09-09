@@ -42,7 +42,6 @@ const HAND_RANK_VALUES: Record<HandRank, number> = {
 
 const HAND_EVALUATION_MULTIPLIER = 1_000_000
 const KICKER_BASE = 15
-const BLIND_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes standard
 
 /**
  * Resets and shuffles the deck using the DeckManager singleton.
@@ -60,7 +59,6 @@ export function resetDeck(): void {
 export function dealHoleCards(numPlayers: number, cardsPerPlayer = 2): Card[][] {
   const playerCards: Card[][] = Array.from({ length: numPlayers }, () => [])
 
-  // Deal cards in rounds (one card at a time to each player)
   for (let round = 0; round < cardsPerPlayer; round++) {
     for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
       const card = deckManager.drawOne()
@@ -75,19 +73,15 @@ export function dealHoleCards(numPlayers: number, cardsPerPlayer = 2): Card[][] 
 
 /**
  * Deals community cards for a specific phase.
- * @param phase - The dealing phase (flop, turn, or river)
- * @returns Array of community cards for this phase
  */
 export function dealCommunityCards(phase: "flop" | "turn" | "river"): Card[] {
   const cards: Card[] = []
 
-  // Burn one card before dealing
   const burnCard = deckManager.drawOne()
   if (burnCard) {
     deckManager.discard([burnCard])
   }
 
-  // Deal appropriate number of cards for the phase
   const cardsToDeal = phase === "flop" ? 3 : 1
   for (let i = 0; i < cardsToDeal; i++) {
     const card = deckManager.drawOne()
@@ -101,8 +95,6 @@ export function dealCommunityCards(phase: "flop" | "turn" | "river"): Card[] {
 
 /**
  * Evaluates the best possible 5-card poker hand from a set of cards.
- * @param cards - Array of cards to evaluate (must have at least 5)
- * @returns The best hand evaluation
  */
 export function evaluateHand(cards: Card[]): HandEvaluation {
   if (cards.length < 5) {
@@ -122,9 +114,6 @@ export function evaluateHand(cards: Card[]): HandEvaluation {
   return bestHand!
 }
 
-/**
- * Evaluates exactly 5 cards and returns the hand ranking.
- */
 function evaluateFiveCards(cards: Card[]): HandEvaluation {
   const sortedCards = [...cards].sort((a, b) => RANK_VALUES[b.rank] - RANK_VALUES[a.rank])
 
@@ -133,58 +122,45 @@ function evaluateFiveCards(cards: Card[]): HandEvaluation {
   const rankCounts = getRankCounts(sortedCards)
   const counts = Object.values(rankCounts).sort((a, b) => b - a)
 
-  // Royal Flush
   if (isFlush && isStraight && sortedCards[0].rank === "A") {
     return createHandEvaluation("royal-flush", sortedCards, "Royal Flush")
   }
 
-  // Straight Flush
   if (isFlush && isStraight) {
     return createHandEvaluation("straight-flush", sortedCards, "Straight Flush", RANK_VALUES[sortedCards[0].rank])
   }
 
-  // Four of a Kind
   if (counts[0] === 4) {
     return createHandEvaluation("four-of-a-kind", sortedCards, "Four of a Kind", getQuadValue(rankCounts))
   }
 
-  // Full House
   if (counts[0] === 3 && counts[1] === 2) {
     return createHandEvaluation("full-house", sortedCards, "Full House", getFullHouseValue(rankCounts))
   }
 
-  // Flush
   if (isFlush) {
     return createHandEvaluation("flush", sortedCards, "Flush", getHighCardValue(sortedCards))
   }
 
-  // Straight
   if (isStraight) {
     return createHandEvaluation("straight", sortedCards, "Straight", RANK_VALUES[sortedCards[0].rank])
   }
 
-  // Three of a Kind
   if (counts[0] === 3) {
     return createHandEvaluation("three-of-a-kind", sortedCards, "Three of a Kind", getTripValue(rankCounts))
   }
 
-  // Two Pair
   if (counts[0] === 2 && counts[1] === 2) {
     return createHandEvaluation("two-pair", sortedCards, "Two Pair", getTwoPairValue(rankCounts))
   }
 
-  // Pair
   if (counts[0] === 2) {
     return createHandEvaluation("pair", sortedCards, "Pair", getPairValue(rankCounts))
   }
 
-  // High Card
   return createHandEvaluation("high-card", sortedCards, "High Card", getHighCardValue(sortedCards))
 }
 
-/**
- * Creates a standardized hand evaluation object.
- */
 function createHandEvaluation(
   rank: HandRank,
   cards: Card[],
@@ -199,16 +175,11 @@ function createHandEvaluation(
   }
 }
 
-/**
- * Checks if 5 cards form a straight.
- */
 function checkStraight(cards: Card[]): boolean {
   const values = cards.map((c) => RANK_VALUES[c.rank])
 
-  // Check for regular straight
   let isStraight = values.every((v, i) => i === 0 || values[i - 1] - v === 1)
 
-  // Check for A-2-3-4-5 straight (wheel)
   if (!isStraight && cards[0].rank === "A" && cards[1].rank === "5") {
     const wheelValues = [14, 5, 4, 3, 2]
     isStraight = values.every((v, i) => v === wheelValues[i])
@@ -217,9 +188,6 @@ function checkStraight(cards: Card[]): boolean {
   return isStraight
 }
 
-/**
- * Counts occurrences of each rank in the hand.
- */
 function getRankCounts(cards: Card[]): Record<string, number> {
   return cards.reduce((counts, card) => {
     counts[card.rank] = (counts[card.rank] || 0) + 1
@@ -227,9 +195,6 @@ function getRankCounts(cards: Card[]): Record<string, number> {
   }, {} as Record<string, number>)
 }
 
-/**
- * Generates all combinations of a given size from an array.
- */
 function getCombinations<T>(array: T[], size: number): T[][] {
   if (size > array.length) return []
   if (size === array.length) return [array]
@@ -244,9 +209,6 @@ function getCombinations<T>(array: T[], size: number): T[][] {
   return combinations
 }
 
-/**
- * Calculates kicker-based tiebreaker values for various hand types.
- */
 function calculateKickerValue(ranks: string[], basePowers: number[]): number {
   return ranks.reduce((sum, rank, i) => sum + RANK_VALUES[rank as Rank] * Math.pow(KICKER_BASE, basePowers[i] ?? 0), 0)
 }
@@ -352,6 +314,7 @@ function evaluateOmahaHand(holeCards: Card[], communityCards: Card[]): HandEvalu
 
 /**
  * Initializes a new poker game with the given configuration.
+ * Default gameMode is now "cash".
  */
 export function initializeGame(
   playerIds: string[],
@@ -359,7 +322,7 @@ export function initializeGame(
   seatNumbers: number[],
   startingChips = 1000,
   dealerSeat = 1,
-  gameMode: GameMode = "sng",
+  gameMode: GameMode = "cash",
   timestamp: number = Date.now(),
 ): GameState {
   resetDeck()
@@ -379,10 +342,8 @@ export function initializeGame(
     seatNumber: seatNumbers[index],
   }))
 
-  // Sort players by seat number for proper order
   players.sort((a, b) => a.seatNumber - b.seatNumber)
 
-  // Find dealer index (player with dealer seat)
   const dealerIndex = players.findIndex((p) => p.seatNumber === dealerSeat)
   const smallBlindIndex = (dealerIndex + 1) % players.length
   const bigBlindIndex = (dealerIndex + 2) % players.length
@@ -409,16 +370,23 @@ export function initializeGame(
 
 /**
  * Starts a new hand with rotated dealer button and fresh cards.
+ *
+ * IMPORTANT CHANGE:
+ * For SNG / MTT the caller MUST pass the correct current smallBlind and bigBlind
+ * from the tournament blind structure (tournamentEngine.getCurrentBlindLevel).
+ * This function no longer invents its own blind progression with a multiplier.
+ *
+ * Optional ante is now supported.
  */
 export function startNewHand(
   currentState: GameState,
   smallBlind: number,
   bigBlind: number,
   timestamp: number = Date.now(),
+  ante: number = 0,
 ): GameState {
   resetDeck()
 
-  // Reset player states for the new hand
   const players = currentState.players.map((p) => ({
     ...p,
     bet: 0,
@@ -428,43 +396,43 @@ export function startNewHand(
     lastAction: undefined,
   }))
 
-  // Rotate dealer to next active player
+  // Rotate dealer to next active player (skip busted players)
   let newDealerIndex = (currentState.dealerIndex + 1) % players.length
   while (players[newDealerIndex].chips === 0 && newDealerIndex !== currentState.dealerIndex) {
     newDealerIndex = (newDealerIndex + 1) % players.length
   }
 
   const newDealerSeat = players[newDealerIndex].seatNumber
-
-  // Calculate blinds positions
   const smallBlindIndex = (newDealerIndex + 1) % players.length
   const bigBlindIndex = (newDealerIndex + 2) % players.length
 
-  // Deal new cards
+  // Deal hole cards
   const cardsPerPlayer = currentState.gameMode === "omaha" ? 4 : 2
   const playerCards = dealHoleCards(players.length, cardsPerPlayer)
   players.forEach((player, index) => {
     player.cards = playerCards[index]
   })
 
-  // Calculate Blinds based on Mode
-  let currentSmallBlind = smallBlind
-  let currentBigBlind = bigBlind
-  let newBlindLevel = currentState.blindLevel ?? 1
-  let lastIncreaseTime = currentState.lastBlindIncreaseTime ?? Date.now()
+  // Use the blinds that were passed in (authoritative source of truth)
+  const currentSmallBlind = smallBlind
+  const currentBigBlind = bigBlind
 
-  if (currentState.gameMode === "sng" || currentState.gameMode === "mtt") {
-    // Check if enough time has passed since last increase
-    const now = timestamp
-    if (now - lastIncreaseTime > BLIND_INTERVAL_MS) {
-      newBlindLevel++
-      lastIncreaseTime = now
+  // Keep level tracking purely for UI / history
+  const newBlindLevel = currentState.blindLevel ?? 1
+  const lastIncreaseTime = currentState.lastBlindIncreaseTime ?? timestamp
+
+  let pot = 0
+
+  // Post antes first (if any) from every player who still has chips
+  if (ante > 0) {
+    for (const player of players) {
+      if (player.chips > 0) {
+        const anteAmount = Math.min(ante, player.chips)
+        player.chips -= anteAmount
+        pot += anteAmount
+        if (player.chips === 0) player.allIn = true
+      }
     }
-
-    // Apply multiplier based on level
-    const multiplier = Math.pow(1.5, newBlindLevel - 1)
-    currentSmallBlind = Math.floor(smallBlind * multiplier)
-    currentBigBlind = Math.floor(bigBlind * multiplier)
   }
 
   // Post blinds
@@ -482,9 +450,8 @@ export function startNewHand(
   bigBlindPlayer.bet = bigBlindAmount
   if (bigBlindPlayer.chips === 0) bigBlindPlayer.allIn = true
 
-  const pot = smallBlindAmount + bigBlindAmount
+  pot += smallBlindAmount + bigBlindAmount
 
-  // Start with player after big blind
   const currentPlayerIndex = (bigBlindIndex + 1) % players.length
 
   return {
@@ -508,7 +475,10 @@ export function startNewHand(
 }
 
 /**
- * Processes a player's action (fold, check, call, raise, all-in).
+ * Processes a player's action.
+ *
+ * All-in or Fold mode ("allin"):
+ * Only "fold" and "all-in" are legal actions. Everything else is rejected.
  */
 export function processAction(
   gameState: GameState,
@@ -524,10 +494,12 @@ export function processAction(
     return gameState
   }
 
-  // In all-in or fold mode, only allow fold or all-in actions
-  if (newState.gameMode === "allin" && action !== "fold" && action !== "all-in") {
-    console.log("[v0] All-in or fold mode: only fold and all-in allowed, rejecting action:", action)
-    return gameState
+  // Strict All-in or Fold restriction
+  if (newState.gameMode === "allin") {
+    if (action !== "fold" && action !== "all-in") {
+      console.log("[v0] All-in or Fold mode: only fold and all-in are allowed. Rejected:", action)
+      return gameState
+    }
   }
 
   switch (action) {
@@ -588,9 +560,6 @@ export function processAction(
   return advanceTurn(newState)
 }
 
-/**
- * Advances to the next player's turn or moves to the next phase if all players have acted.
- */
 function advanceTurn(gameState: GameState): GameState {
   const newState = { ...gameState }
   const activePlayers = newState.players.filter((p) => !p.folded && !p.allIn)
@@ -601,7 +570,6 @@ function advanceTurn(gameState: GameState): GameState {
     return advancePhase(newState)
   }
 
-  // Move to next non-folded, non-all-in player
   do {
     newState.currentPlayerIndex = (newState.currentPlayerIndex + 1) % newState.players.length
   } while (newState.players[newState.currentPlayerIndex].folded || newState.players[newState.currentPlayerIndex].allIn)
@@ -609,19 +577,14 @@ function advanceTurn(gameState: GameState): GameState {
   return newState
 }
 
-/**
- * Advances the game to the next phase (flop, turn, river, showdown).
- */
 function advancePhase(gameState: GameState): GameState {
   const newState = { ...gameState }
 
-  // Check if hand is won early because everyone else folded
   const activePlayers = newState.players.filter((p) => !p.folded)
   if (activePlayers.length === 1) {
     newState.phase = "showdown"
     newState.winners = [activePlayers[0].id]
-    
-    // Distribute pot to the only remaining player
+
     const winner = newState.players.find((p) => p.id === activePlayers[0].id)
     if (winner) {
       winner.chips += newState.pot
@@ -630,14 +593,12 @@ function advancePhase(gameState: GameState): GameState {
     return newState
   }
 
-  // Reset player bets and actions for the new phase
   newState.players.forEach((player) => {
     player.bet = 0
     player.lastAction = undefined
   })
   newState.currentBet = 0
 
-  // Deal community cards and transition to next phase
   switch (newState.phase) {
     case "pre-flop":
       newState.communityCards = dealCommunityCards("flop")
@@ -658,19 +619,17 @@ function advancePhase(gameState: GameState): GameState {
       newState.phase = "showdown"
       const winners = determineWinners(newState.players, newState.communityCards, newState)
       newState.winners = winners
-      
-      // Distribute pot to winners
+
       if (winners.length > 0) {
         const share = Math.floor(newState.pot / winners.length)
         const remainder = newState.pot % winners.length
-        
+
         newState.players.forEach((player) => {
           if (winners.includes(player.id)) {
             player.chips += share
           }
         })
-        
-        // Give remainder to the first winner
+
         const firstWinner = newState.players.find((p) => p.id === winners[0])
         if (firstWinner) {
           firstWinner.chips += remainder
@@ -685,7 +644,6 @@ function advancePhase(gameState: GameState): GameState {
       break
   }
 
-  // Set first active player after dealer as current player if anyone can act
   const playersWhoCanAct = newState.players.filter((p) => !p.folded && !p.allIn)
   if (playersWhoCanAct.length > 0) {
     newState.currentPlayerIndex = (newState.dealerIndex + 1) % newState.players.length
