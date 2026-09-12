@@ -36,66 +36,68 @@ export default function PlayerPosition({ playerId, position, showCards = false }
 
   if (!player) return null
 
-  // Get player's cards from game state
   const playerState = gameState?.players.find((p) => p.id === playerId)
   const playerCards = playerState?.cards || []
-
-  // Check if this player is small blind or big blind
-  const isSmallBlind = gameState && gameState.players[gameState.smallBlindIndex]?.id === playerId
-  const isBigBlind = gameState && gameState.players[gameState.bigBlindIndex]?.id === playerId
-
-  // Check if it's this player's turn
   const isPlayerTurn = gameState && gameState.players[gameState.currentPlayerIndex]?.id === playerId
+  const isHero = playerId === "local" || position === "bottom"
 
+  // Mobile-first seat ring positions (portrait felt)
   const positionClasses: Record<string, string> = {
-    top: "top-[2%] left-1/2 -translate-x-1/2",
-    "top-left": "top-[18%] left-[2%] md:left-[4%]",
-    "top-right": "top-[18%] right-[2%] md:right-[4%]",
-    "bottom-left": "bottom-[18%] left-[2%] md:left-[4%]",
-    "bottom-right": "bottom-[18%] right-[2%] md:right-[4%]",
-    bottom: "bottom-[2%] left-1/2 -translate-x-1/2",
+    top: "top-[1%] left-1/2 -translate-x-1/2",
+    "top-left": "top-[14%] left-[1%]",
+    "top-right": "top-[14%] right-[1%]",
+    "bottom-left": "bottom-[14%] left-[1%]",
+    "bottom-right": "bottom-[14%] right-[1%]",
+    bottom: "bottom-[0%] left-1/2 -translate-x-1/2",
   }
 
   const getCardPositionClass = (pos: string) => {
     switch (pos) {
       case "top":
-        return "absolute top-[105%] left-1/2 -translate-x-1/2 flex gap-0.5 scale-75 md:scale-80 origin-top z-40"
+        return "absolute top-[105%] left-1/2 -translate-x-1/2 flex gap-0.5 scale-75 origin-top z-40"
       case "top-left":
       case "bottom-left":
-        return "absolute left-[105%] top-[15%] flex gap-0.5 scale-75 md:scale-80 origin-left z-40"
+        return "absolute left-[105%] top-[12%] flex gap-0.5 scale-75 origin-left z-40"
       case "top-right":
       case "bottom-right":
-        return "absolute right-[105%] top-[15%] flex gap-0.5 scale-75 md:scale-80 origin-right z-40"
+        return "absolute right-[105%] top-[12%] flex gap-0.5 scale-75 origin-right z-40"
       case "bottom":
-        return "absolute bottom-[102%] left-1/2 -translate-x-1/2 flex gap-0.5 scale-90 md:scale-95 origin-bottom z-40"
+        return "absolute bottom-[102%] left-1/2 -translate-x-1/2 flex gap-0.5 scale-90 origin-bottom z-40"
       default:
         return "absolute -bottom-6 left-1/2 -translate-x-1/2 flex gap-0.5 scale-75 origin-top z-40"
     }
   }
 
+  const chipLabel = `$${(playerState?.chips ?? 0).toLocaleString()}`
 
   return (
     <div className={cn("absolute z-30 transition-all duration-300", positionClasses[position])}>
-      <div className="relative">
-        {/* Turn Timer Indicator - Opponents Only */}
+      <div className="relative flex flex-col items-center">
         {playerId !== "local" && (
           <PlayerTurnIndicator
             position={position}
-            isActive={isPlayerTurn || false}
+            isActive={!!isPlayerTurn}
             onTimeUp={handleTimeUp}
             duration={turnDuration}
           />
         )}
 
-        {/* Avatar Box */}
+        {/* Chip stack above seat for top half; below for bottom half */}
+        {(position === "top" || position === "top-left" || position === "top-right") && (
+          <span className="mb-1.5 text-[15px] leading-none font-normal text-[#FFDA5F] tracking-tight">
+            {chipLabel}
+          </span>
+        )}
+
+        {/* Seat video tile — Figma: 96×128, #131A33 / #2C344D */}
         <div
           className={cn(
-            "relative w-[80px] h-[106px] md:w-[96px] md:h-[128px] rounded-xl md:rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900 overflow-hidden flex flex-col justify-between transition-all duration-300 border-2",
-            isPlayerTurn ? "border-amber-400 shadow-[0_0_15px_rgba(251,176,59,0.5)]" : "border-slate-700/60 shadow-xl"
+            "relative w-[80px] h-[106px] sm:w-[96px] sm:h-[128px] rounded-lg overflow-hidden flex flex-col bg-[#131A33] border border-[#2C344D] shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all duration-300",
+            isPlayerTurn && "ring-2 ring-[#E5A93C] shadow-[0_0_16px_rgba(229,169,60,0.45)]",
+            isHero && "ring-1 ring-white/10",
           )}
         >
-          {/* Video / Profile Placeholder */}
-          <div className="w-full flex-grow h-[80%] overflow-hidden relative">
+          <div className="w-full flex-grow overflow-hidden relative">
             <VideoPlayer
               stream={player.stream}
               name={player.name}
@@ -105,16 +107,12 @@ export default function PlayerPosition({ playerId, position, showCards = false }
             />
           </div>
 
-
-
-          {/* Glassmorphic Player Name Banner at Bottom of Avatar Box */}
-          <div className="absolute bottom-0 inset-x-0 bg-slate-950/85 backdrop-blur-[2px] py-0.5 md:py-1 text-center border-t border-white/5 z-20">
-            <span className="text-[9px] md:text-[10px] font-bold text-white tracking-wide truncate block px-1">
+          <div className="absolute bottom-0 inset-x-0 bg-[#07090E]/85 backdrop-blur-[2px] py-0.5 text-center border-t border-white/5 z-20">
+            <span className="text-[9px] sm:text-[10px] font-bold text-white tracking-wide truncate block px-1">
               {player.name}
             </span>
           </div>
 
-          {/* Player Cards (Opponent Hole Cards peeking) */}
           {showCards && playerCards.length > 0 && (
             <div className={getCardPositionClass(position)}>
               {playerCards.map((card, index) => (
@@ -131,7 +129,12 @@ export default function PlayerPosition({ playerId, position, showCards = false }
           )}
         </div>
 
-        {/* Chat Bubble */}
+        {(position === "bottom" || position === "bottom-left" || position === "bottom-right") && (
+          <span className="mt-1.5 text-[15px] leading-none font-normal text-[#FFDA5F] tracking-tight">
+            {chipLabel}
+          </span>
+        )}
+
         {lastMessage && (
           <ChatBubble
             key={lastMessage.timestamp}
@@ -140,13 +143,6 @@ export default function PlayerPosition({ playerId, position, showCards = false }
             position={position as any}
           />
         )}
-      </div>
-
-      {/* Chips stack pill below avatar box */}
-      <div className="mt-2 text-center z-20">
-        <span className="bg-slate-950/90 border border-slate-800/80 text-[#FEB956] text-[9px] md:text-[11px] font-extrabold px-2.5 py-0.5 md:px-3 md:py-0.5 rounded-full shadow-lg whitespace-nowrap tracking-tight">
-          ${playerState?.chips?.toLocaleString() || 0}
-        </span>
       </div>
     </div>
   )
