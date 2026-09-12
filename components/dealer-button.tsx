@@ -9,25 +9,26 @@ interface DealerButtonProps {
 
 export default function DealerButton({ seatNumber, className }: DealerButtonProps) {
   const positionClasses: Record<number, string> = {
-    1: "top-[16%] left-[62%] md:left-[64%]",
-    2: "top-[23%] right-[85px] md:right-[100px]",
-    3: "bottom-[23%] right-[85px] md:right-[100px]",
-    4: "bottom-[16%] left-[62%] md:left-[64%]",
-    5: "bottom-[23%] left-[85px] md:left-[100px]",
-    6: "top-[23%] left-[85px] md:left-[100px]",
+    1: "top-[18%] left-[58%]",
+    2: "top-[26%] right-[22%]",
+    3: "bottom-[26%] right-[22%]",
+    4: "bottom-[18%] left-[58%]",
+    5: "bottom-[26%] left-[22%]",
+    6: "top-[26%] left-[22%]",
   }
 
   return (
     <div
       className={cn(
-        "absolute w-8 h-8 md:w-10 md:h-10 bg-white rounded-full shadow-lg border-2 border-yellow-500 flex items-center justify-center z-40 transition-all duration-500",
+        "absolute z-40 flex h-[21px] w-[21px] items-center justify-center rounded-full transition-all duration-500",
+        "bg-[radial-gradient(50%_50%_at_50%_50%,#2C344D_82.69%,#EFD405_87.5%,#222A3D_90.38%,#F4E04A_100%)]",
+        "shadow-md",
         positionClasses[seatNumber],
         className,
       )}
+      aria-label="Dealer"
     >
-      <div className="relative">
-        <span className="text-base md:text-lg font-bold text-gray-900">D</span>
-      </div>
+      <span className="text-[11px] font-medium tracking-[0.4px] text-white">D</span>
     </div>
   )
 }
