@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Plus, Minus, ArrowLeft, Settings, Video } from "lucide-react"
+import { Plus, Minus, ArrowLeft, Settings, Mic, MessageSquare } from "lucide-react"
 import PlayerPosition from "./player-position"
 import CommunityCards from "./community-cards"
 import VideoControls from "./video-controls"
@@ -14,15 +14,16 @@ import { useWebRTC } from "@/hooks/use-webrtc"
 import { useChat } from "@/hooks/use-chat"
 import { usePokerGame } from "@/hooks/use-poker-game"
 import { useTournament } from "@/hooks/use-tournament"
-import Image from "next/image"
 import Lobby from "./lobby"
 import type { StakeTable } from "./table-selection"
 import DealerButton from "./dealer-button"
+import { cn } from "@/lib/utils"
 
 export default function PokerTable() {
   const [raiseAmount, setRaiseAmount] = useState([50])
   const [isRaiseBarOpen, setIsRaiseBarOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [gameStarted, setGameStarted] = useState(false)
   const [showLobby, setShowLobby] = useState(true)
   const [selectedTable, setSelectedTable] = useState<StakeTable | null>(null)
@@ -52,7 +53,6 @@ export default function PokerTable() {
     setPlayerIds(calculatedPlayerIds)
   }, [calculatedPlayerIds])
 
-  // Start game when we have enough players (at least 2)
   useEffect(() => {
     if (roomCode && !isHost) return
 
@@ -72,7 +72,6 @@ export default function PokerTable() {
           }
         })
 
-        console.log("[v0] Starting game with players:", allPlayerNames, "Seats:", seatNumbers)
         const smallBlind = selectedTable?.smallBlind || 10
         const bigBlind = selectedTable?.bigBlind || 20
         const gameMode = selectedTable?.gameMode || "cash"
@@ -128,7 +127,6 @@ export default function PokerTable() {
   const isAllInOrFoldMode = gameState?.gameMode === "allin"
   const isTournamentMode = gameState?.gameMode === "sng" || gameState?.gameMode === "mtt"
 
-  // Live blinds: prefer provider state (kept in sync with tournament levels)
   const displaySmallBlind = liveSmallBlind || selectedTable?.smallBlind || 10
   const displayBigBlind = liveBigBlind || selectedTable?.bigBlind || 20
 
@@ -155,6 +153,13 @@ export default function PokerTable() {
 
     return () => clearInterval(interval)
   }, [isLocalPlayerTurn, turnDuration, handleTimeUp, gameState])
+
+  // Keep raise slider seeded to min when turn starts
+  useEffect(() => {
+    if (isLocalPlayerTurn) {
+      setRaiseAmount([Math.max(minRaise, displayBigBlind)])
+    }
+  }, [isLocalPlayerTurn, minRaise, displayBigBlind])
 
   const handleFold = useCallback(() => {
     if (!isLocalPlayerTurn || !gameState) return
@@ -211,17 +216,7 @@ export default function PokerTable() {
     [isAllInOrFoldMode, localPlayerChips, amountToCall, maxRaise],
   )
 
-  const handleRaiseAmountChange = useCallback((value: number[]) => {
-    setRaiseAmount(value)
-  }, [])
-
-  const handleIncrementRaise = useCallback(() => {
-    setRaiseAmount([Math.min(maxRaise, raiseAmount[0] + 10)])
-  }, [maxRaise, raiseAmount])
-
-  const handleDecrementRaise = useCallback(() => {
-    setRaiseAmount([Math.max(minRaise, raiseAmount[0] - 10)])
-  }, [minRaise, raiseAmount])
+  const actionDisabled = !gameState || !isLocalPlayerTurn
 
   if (showLobby) {
     return (
@@ -235,128 +230,118 @@ export default function PokerTable() {
     )
   }
 
+  const tableTitle = selectedTable?.name || "Table"
+
   return (
-    <div className="relative w-full h-[100dvh] bg-[#111625] overflow-hidden">
-      {/* Top Info Bar */}
-      <div className="absolute top-0 left-0 right-0 h-14 md:h-16 bg-[#131a2e]/60 backdrop-blur-md border-b border-slate-900/50 z-40 flex items-center justify-between px-4">
-        <Button
-          variant="ghost"
-          size="icon"
+    <div className="relative w-full h-[100dvh] max-w-[430px] mx-auto bg-[#07090E] overflow-hidden shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]">
+      {/* —— HeaderSection —— */}
+      <header className="absolute top-0 left-0 right-0 z-40 flex h-[68px] items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[rgba(7,9,14,0.95)] via-[rgba(7,9,14,0.8)] to-transparent">
+        <button
+          type="button"
           onClick={() => setShowLobby(true)}
-          className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/40 bg-[rgba(25,28,34,0.8)] text-slate-300"
+          aria-label="Exit table"
         >
-          <ArrowLeft className="w-5 h-5 md:w-6 md:h-6" />
-        </Button>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
 
-        {selectedTable && (
-          <div className="flex flex-col items-center">
-            <h2 className="text-xs md:text-sm font-extrabold text-[#FEB956] flex items-center gap-1.5 uppercase tracking-wider">
-              {selectedTable.name}
-              {isAllInOrFoldMode && (
-                <span className="text-[9px] text-red-500 font-black px-1.5 py-0.5 bg-red-500/10 rounded border border-red-500/20">
-                  AOF
-                </span>
-              )}
-              {isTournamentMode && gameState?.blindLevel != null && (
-                <span className="text-[9px] text-emerald-400 font-black px-1.5 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/20">
-                  LVL {gameState.blindLevel}
-                </span>
-              )}
-            </h2>
-            <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 font-medium mt-0.5">
-              <span>
-                Blinds: ${displaySmallBlind}/${displayBigBlind}
-                {currentBlindLevel?.ante ? ` (ante ${currentBlindLevel.ante})` : ""}
-              </span>
-              {isTournamentMode && timeUntilNextLevel && (
-                <>
-                  <span>•</span>
-                  <span>Next: {timeUntilNextLevel}</span>
-                </>
-              )}
-              {gameState && (
-                <>
-                  <span>•</span>
-                  <span>
-                    Pot: <span className="text-[#FEB956] font-bold">${gameState.pot || 0}</span>
-                  </span>
-                </>
-              )}
-              {isTournamentMode && tournament && (
-                <>
-                  <span>•</span>
-                  <span>
-                    {tournament.remainingPlayers}/{tournament.totalPlayers}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]">
-            <Video className="w-5 h-5 md:w-6 md:h-6" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsMenuOpen(true)}
-            className="rounded-full w-10 h-10 hover:bg-slate-800/50 text-[#FEB956]"
-          >
-            <Settings className="w-5 h-5 md:w-6 md:h-6" />
-          </Button>
+        <div className="flex min-w-0 flex-col items-center px-2">
+          <h1 className="truncate text-center text-base font-bold uppercase tracking-[0.8px] text-[#E5A93C] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+            {tableTitle}
+          </h1>
+          <p className="text-xs font-medium tracking-[0.3px] text-slate-400">
+            Blinds: ${displaySmallBlind}/${displayBigBlind}
+            {currentBlindLevel?.ante ? ` · Ante ${currentBlindLevel.ante}` : ""}
+            {isTournamentMode && gameState?.blindLevel != null ? ` · L${gameState.blindLevel}` : ""}
+            {isTournamentMode && timeUntilNextLevel ? ` · ${timeUntilNextLevel}` : ""}
+          </p>
         </div>
-      </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsChatOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/60 bg-[#191C22] text-slate-300"
+            aria-label="Chat"
+          >
+            <MessageSquare className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/60 bg-[#191C22] text-slate-300"
+            aria-label="Microphone"
+          >
+            <Mic className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            className="flex h-8 w-8 items-center justify-center text-slate-400"
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
 
       <GameMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
       <VideoControls />
 
-      <div className="absolute top-2 right-14 md:top-4 md:right-32 z-50">
-        <ChatPanel />
-      </div>
+      {isChatOpen && (
+        <div className="absolute top-[72px] right-3 z-50 w-[min(320px,90vw)]">
+          <ChatPanel />
+        </div>
+      )}
 
-      <div className="relative w-full h-full flex items-center justify-center p-0 pt-16 pb-24 md:pb-28 bg-[#111625]">
-        <div className="relative w-[92%] max-w-[420px] h-[80dvh] md:max-w-[450px] md:h-[82dvh] flex items-center justify-center">
-          {playerIds.map((playerId) => {
-            const position = getPlayerPosition(playerId)
-            return <PlayerPosition key={playerId} playerId={playerId} position={position} showCards={true} />
-          })}
-
-          {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={true} />}
-
-          <div className="absolute inset-x-8 top-[10%] bottom-[10%] flex items-center justify-center z-10 pointer-events-none">
+      {/* —— TableArenaSection —— */}
+      <div className="absolute left-0 right-0 top-[71px] bottom-[91px] flex items-center justify-center">
+        <div className="relative h-full w-full max-w-[390px]">
+          {/* Vertical felt */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[min(516px,72%)] w-[min(233px,60%)] -translate-x-1/2 -translate-y-1/2">
             <div
-              className="relative w-full h-full rounded-[110px] shadow-[0px_20px_50px_rgba(0,0,0,0.85),_inset_0px_0px_60px_15px_rgba(0,0,0,0.6)] border-[10px] border-[#222938] ring-1 ring-white/5 overflow-hidden"
-              style={{ background: "radial-gradient(ellipse at center, #1b5e20 0%, #0d3c13 100%)" }}
-            >
-              <div className="absolute inset-3 rounded-[98px] border border-amber-500/10 pointer-events-none" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.05] pointer-events-none">
-                <Image
-                  src="/logo.png"
-                  alt="Hold'em or Fold'em Poker"
-                  width={140}
-                  height={140}
-                  className="w-24 h-24 md:w-32 md:h-32 object-contain"
-                />
-              </div>
-            </div>
+              className="h-full w-full rounded-[150px] border-[12px] border-[#3D3D3D] shadow-[0px_20px_50px_rgba(0,0,0,0.8),inset_0px_0px_50px_12px_rgba(0,0,0,0.5)]"
+              style={{
+                background: "radial-gradient(107.61% 56.47% at 50% 50%, #2E7D32 0%, #1B5E20 100%)",
+              }}
+            />
           </div>
 
-          {gameState && gameState.dealerSeatNumber && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
-
+          {/* Pot badge — above board */}
           {gameState && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+            <div className="absolute left-1/2 top-[28%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl border border-[rgba(254,185,86,0.15)] bg-[rgba(49,56,82,0.24)] px-6 py-2 backdrop-blur-[10px]">
+              <span className="text-[9px] font-bold uppercase tracking-[0.9px] text-[#C6C6CE]">Total Pot</span>
+              <span className="text-xl font-extrabold leading-7 text-[#FEB956]">
+                ${(gameState.pot || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
+              </span>
+            </div>
+          )}
+
+          {/* Community cards */}
+          {gameState && (
+            <div className="absolute left-1/2 top-[42%] z-30 -translate-x-1/2 -translate-y-1/2">
               <CommunityCards />
             </div>
           )}
 
+          {/* Dealer */}
+          {gameState?.dealerSeatNumber != null && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
+
+          {/* Seats */}
+          {playerIds.map((playerId) => (
+            <PlayerPosition
+              key={playerId}
+              playerId={playerId}
+              position={getPlayerPosition(playerId)}
+              showCards={true}
+            />
+          ))}
+          {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={true} />}
+
           {!gameState && players.size < 2 && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#131a2e]/90 backdrop-blur-md px-6 py-4 rounded-2xl border border-amber-500/20 shadow-2xl z-30">
-              <p className="text-sm md:text-base font-extrabold text-[#FEB956] text-center tracking-wide uppercase">
+            <div className="absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-500/20 bg-[#131A33]/95 px-6 py-4 shadow-2xl backdrop-blur-md">
+              <p className="text-center text-sm font-extrabold uppercase tracking-wide text-[#E5A93C]">
                 Waiting for players...
-                <br />
-                <span className="text-xs text-slate-400 font-semibold normal-case mt-1 block">
+                <span className="mt-1 block text-xs font-semibold normal-case text-slate-400">
                   ({players.size}/2 minimum)
                 </span>
               </p>
@@ -365,92 +350,96 @@ export default function PokerTable() {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 px-6 py-4 pb-8 z-40 bg-[#131a2e] border-t border-slate-800/80 shadow-[0px_-15px_30px_rgba(0,0,0,0.5)] backdrop-blur-md">
-        <div className="flex gap-4 justify-center items-center max-w-md mx-auto w-full relative">
-          <Button
-            variant="outline"
-            disabled={!gameState || !isLocalPlayerTurn}
+      {/* —— Footer ActionControlsSection (thumb reach) —— */}
+      <footer className="absolute bottom-0 left-0 right-0 z-40 border-t border-slate-800/60 bg-gradient-to-t from-[#07090E] via-[#0C0F16] to-[rgba(12,15,22,0.9)] px-4 pb-4 pt-2">
+        <div className="mx-auto flex w-full max-w-[358px] gap-2.5">
+          <button
+            type="button"
+            disabled={actionDisabled}
             onClick={handleFold}
-            className="flex-1 h-[44px] text-xs font-bold rounded-xl border border-amber-500/30 text-[#FEB956] bg-transparent hover:bg-amber-500/5 hover:text-[#FEB956] uppercase tracking-wider shadow-lg transition-all"
+            className={cn(
+              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-sm font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity",
+              actionDisabled && "opacity-40",
+            )}
           >
             Fold
-          </Button>
-          <Button
-            variant="outline"
-            disabled={!gameState || !isLocalPlayerTurn}
+          </button>
+
+          <button
+            type="button"
+            disabled={actionDisabled}
             onClick={handleCall}
-            className="flex-1 h-[44px] text-xs font-bold rounded-xl border border-amber-500/30 text-[#FEB956] bg-transparent hover:bg-amber-500/5 hover:text-[#FEB956] uppercase tracking-wider shadow-lg transition-all"
+            className={cn(
+              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-sm font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity",
+              actionDisabled && "opacity-40",
+            )}
           >
             {getCallButtonLabel()}
-          </Button>
+          </button>
+
           {!isAllInOrFoldMode && (
-            <>
-              <Sheet open={isRaiseBarOpen} onOpenChange={setIsRaiseBarOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-                    className="flex-1 md:hidden h-[44px] text-xs font-black rounded-xl bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90 uppercase tracking-wider shadow-lg border-0 transition-all"
-                  >
-                    Raise ${raiseAmount[0]}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[300px] bg-[#131a2e] border-slate-800">
-                  <SheetHeader>
-                    <SheetTitle className="text-white">Raise Amount</SheetTitle>
-                  </SheetHeader>
-                  <div className="py-6 text-white">
-                    <div className="text-center mb-6">
-                      <p className="text-4xl font-extrabold text-[#FEB956]">${raiseAmount[0]}</p>
-                      <p className="text-xs text-slate-400 mt-2">
-                        Min: ${minRaise} • Max: ${maxRaise}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={handleDecrementRaise}
-                        className="touch-manipulation bg-transparent border-slate-700 text-[#FEB956] hover:bg-slate-800"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </Button>
-                      <Slider
-                        value={raiseAmount}
-                        onValueChange={handleRaiseAmountChange}
-                        max={maxRaise}
-                        min={minRaise}
-                        step={10}
-                        className="flex-grow accent-[#FEB956]"
-                      />
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={handleIncrementRaise}
-                        className="touch-manipulation bg-transparent border-slate-700 text-[#FEB956] hover:bg-slate-800"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </Button>
-                    </div>
+            <Sheet open={isRaiseBarOpen} onOpenChange={setIsRaiseBarOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                  disabled={actionDisabled || !canRaise}
+                  className={cn(
+                    "relative flex h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-b from-[#E5A93C] to-[#B87C20] text-sm font-bold uppercase tracking-[0.7px] text-[#020617] shadow-[0px_10px_15px_-3px_rgba(120,53,15,0.3),0px_4px_6px_-4px_rgba(120,53,15,0.3)] transition-opacity",
+                    (actionDisabled || !canRaise) && "opacity-40",
+                  )}
+                >
+                  Raise ${raiseAmount[0]}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[300px] border-slate-800 bg-[#0C0F16]">
+                <SheetHeader>
+                  <SheetTitle className="text-white">Raise Amount</SheetTitle>
+                </SheetHeader>
+                <div className="py-6 text-white">
+                  <div className="mb-6 text-center">
+                    <p className="text-4xl font-extrabold text-[#E5A93C]">${raiseAmount[0]}</p>
+                    <p className="mt-2 text-xs text-slate-400">
+                      Min: ${minRaise} · Max: ${maxRaise}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
                     <Button
-                      className="w-full mt-6 py-6 text-base font-bold bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90"
-                      onClick={handleRaise}
+                      size="icon"
+                      variant="outline"
+                      onClick={() => setRaiseAmount([Math.max(minRaise, raiseAmount[0] - 10)])}
+                      className="border-slate-700 bg-transparent text-[#E5A93C] hover:bg-slate-800"
                     >
-                      Confirm Raise
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <Slider
+                      value={raiseAmount}
+                      onValueChange={setRaiseAmount}
+                      max={Math.max(maxRaise, minRaise)}
+                      min={minRaise}
+                      step={10}
+                      className="flex-grow"
+                    />
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => setRaiseAmount([Math.min(maxRaise, raiseAmount[0] + 10)])}
+                      className="border-slate-700 bg-transparent text-[#E5A93C] hover:bg-slate-800"
+                    >
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                </SheetContent>
-              </Sheet>
-              <Button
-                disabled={!gameState || !isLocalPlayerTurn || !canRaise}
-                onClick={() => setIsRaiseBarOpen(true)}
-                className="hidden md:flex px-8 h-[44px] text-xs font-black rounded-xl bg-[#FEB956] text-[#131a2e] hover:bg-[#FEB956]/90 uppercase tracking-wider shadow-lg border-0 transition-all"
-              >
-                Raise ${raiseAmount[0]}
-              </Button>
-            </>
+                  <Button
+                    className="mt-6 w-full bg-gradient-to-b from-[#E5A93C] to-[#B87C20] py-6 text-base font-bold text-[#020617] hover:opacity-95"
+                    onClick={handleRaise}
+                  >
+                    Confirm Raise
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
           )}
         </div>
-      </div>
+      </footer>
     </div>
   )
 }
