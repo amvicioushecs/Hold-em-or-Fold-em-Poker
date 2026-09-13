@@ -1,10 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Users, Crown, CheckCircle2, X } from "lucide-react"
+import { Users, Crown, CheckCircle2, ArrowLeft, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { StakeTable } from "./table-selection"
 
@@ -24,247 +22,178 @@ interface SeatSelectionProps {
   table: StakeTable
 }
 
+function formatChips(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(2)}M`
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K`
+  return amount.toString()
+}
+
 export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: SeatSelectionProps) {
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
 
-  // Define 6 seats around the table with their positions
-  const seats: Seat[] = [
-    {
-      id: 1,
-      position: "top",
-      occupied: Math.random() > 0.5,
-      playerName: "Alex K.",
-      playerChips: 45000,
-      isVip: false,
-    },
-    {
-      id: 2,
-      position: "top-right",
-      occupied: Math.random() > 0.5,
-      playerName: "Sarah M.",
-      playerChips: 32000,
-      isVip: true,
-    },
-    {
-      id: 3,
-      position: "bottom-right",
-      occupied: Math.random() > 0.5,
-      playerName: "Mike R.",
-      playerChips: 58000,
-      isVip: false,
-    },
-    {
-      id: 4,
-      position: "bottom",
-      occupied: false,
-      playerName: undefined,
-      playerChips: undefined,
-    },
-    {
-      id: 5,
-      position: "bottom-left",
-      occupied: Math.random() > 0.5,
-      playerName: "Emma L.",
-      playerChips: 41000,
-      isVip: false,
-    },
-    {
-      id: 6,
-      position: "top-left",
-      occupied: Math.random() > 0.5,
-      playerName: "David P.",
-      playerChips: 67000,
-      isVip: false,
-    },
-  ]
+  // Stable mock occupancy for the session (avoid re-random on re-render)
+  const seats: Seat[] = useMemo(
+    () => [
+      { id: 1, position: "top", occupied: true, playerName: "Alex K.", playerChips: 45000 },
+      { id: 2, position: "top-right", occupied: true, playerName: "Sarah M.", playerChips: 32000, isVip: true },
+      { id: 3, position: "bottom-right", occupied: false },
+      { id: 4, position: "bottom", occupied: false },
+      { id: 5, position: "bottom-left", occupied: true, playerName: "Emma L.", playerChips: 41000 },
+      { id: 6, position: "top-left", occupied: false },
+    ],
+    [],
+  )
 
-  const formatChips = (amount: number): string => {
-    if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(2)}M`
-    } else if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(1)}K`
-    }
-    return amount.toString()
-  }
-
-  const handleSeatClick = (seat: Seat) => {
-    if (!seat.occupied) {
-      setSelectedSeat(seat.id)
-    }
-  }
-
-  const handleConfirm = () => {
-    if (selectedSeat) {
-      onSelectSeat(selectedSeat)
-      onClose()
-    }
-  }
-
-  // Position mapping for CSS - Optimized for mobile
   const positionClasses: Record<string, string> = {
-    top: "top-[8%] left-1/2 -translate-x-1/2",
-    "top-right": "top-[18%] right-[8%] md:right-[12%]",
-    "bottom-right": "bottom-[18%] right-[8%] md:right-[12%]",
-    bottom: "bottom-[8%] left-1/2 -translate-x-1/2",
-    "bottom-left": "bottom-[18%] left-[8%] md:left-[12%]",
-    "top-left": "top-[18%] left-[8%] md:left-[12%]",
+    top: "top-[4%] left-1/2 -translate-x-1/2",
+    "top-right": "top-[16%] right-[2%]",
+    "bottom-right": "bottom-[16%] right-[2%]",
+    bottom: "bottom-[4%] left-1/2 -translate-x-1/2",
+    "bottom-left": "bottom-[16%] left-[2%]",
+    "top-left": "top-[16%] left-[2%]",
   }
 
   const availableSeats = seats.filter((s) => !s.occupied).length
 
+  if (!isOpen) return null
+
+  const handleConfirm = () => {
+    if (!selectedSeat) return
+    onSelectSeat(selectedSeat)
+    onClose()
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full md:max-w-5xl h-[100dvh] md:h-auto md:max-h-[90vh] p-0 gap-0 bg-slate-900 border-amber-500/20">
-        {/* Header - Mobile Optimized */}
-        <DialogHeader className="p-4 md:p-6 pb-3 md:pb-4 border-b border-amber-500/20 bg-gradient-to-br from-slate-800 to-slate-900">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg md:text-2xl font-bold flex items-center gap-2 text-yellow-400">
-              <Users className="w-5 h-5 md:w-6 md:h-6" />
-              <span className="hidden sm:inline">Choose Your Seat</span>
-              <span className="sm:hidden">Select Seat</span>
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Badge
-                variant="secondary"
-                className="text-xs md:text-sm bg-amber-500/20 text-amber-400 border-amber-500/30 px-2 py-0.5"
-              >
-                {availableSeats} <span className="hidden sm:inline">seat{availableSeats !== 1 ? "s" : ""}</span> open
-              </Badge>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8 md:hidden text-slate-400 hover:text-yellow-400 hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-          <div className="text-xs md:text-sm text-amber-400/80 mt-1 md:mt-2">
-            {table.name} •{" "}
-            <span className="text-yellow-400">
-              ${formatChips(table.smallBlind)}/${formatChips(table.bigBlind)}
-            </span>
-          </div>
-        </DialogHeader>
+    <div className="fixed inset-0 z-[70] flex flex-col bg-[#07090E]">
+      {/* Header */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-800/70 bg-[#0C0F16] px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700/50 bg-[#191C22] text-slate-300"
+          aria-label="Back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-bold text-[#E5A93C]">Choose Seat</h1>
+          <p className="truncate text-[11px] text-slate-400">
+            {table.name}
+            <span className="mx-1.5 text-slate-600">·</span>
+            ${formatChips(table.smallBlind)}/${formatChips(table.bigBlind)}
+            <span className="mx-1.5 text-slate-600">·</span>
+            <span className="text-emerald-400">{availableSeats} open</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700/50 bg-[#191C22] text-slate-400"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </header>
 
-        {/* Table Visualization - Mobile Optimized */}
-        <div className="relative flex-1 md:h-[450px] lg:h-[500px] p-3 md:p-6 lg:p-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
-          {/* Poker Table */}
-          <div className="absolute inset-3 md:inset-6 lg:inset-8">
-            <div className="relative w-full h-full">
-              {/* Table Surface - Enhanced with brand colors */}
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-950 to-emerald-900 rounded-[50%] shadow-[0_0_60px_rgba(251,191,36,0.15)] border-4 md:border-8 border-amber-600/30">
-                {/* Subtle inner glow */}
-                <div className="absolute inset-0 rounded-[50%] shadow-[inset_0_0_40px_rgba(251,191,36,0.1)]" />
-
-                {/* Table Center Info - Mobile Optimized */}
-                <div className="absolute inset-0 flex items-center justify-center px-4">
-                  <div className="text-center bg-slate-900/80 backdrop-blur-sm rounded-lg px-3 py-2 md:px-6 md:py-4 border border-amber-500/30 shadow-lg shadow-amber-500/10 max-w-[80%]">
-                    <p className="text-sm md:text-lg font-bold text-yellow-400 mb-0.5 md:mb-1 truncate">{table.name}</p>
-                    <p className="text-xs md:text-sm text-amber-400">
-                      {table.currentPlayers}/{table.maxPlayers} Players
-                    </p>
-                  </div>
-                </div>
-
-                {/* Seats - Mobile Optimized with larger touch targets */}
-                {seats.map((seat) => (
-                  <button
-                    key={seat.id}
-                    onClick={() => handleSeatClick(seat)}
-                    disabled={seat.occupied}
-                    className={cn(
-                      "absolute rounded-lg transition-all duration-200 touch-manipulation active:scale-95",
-                      // Mobile: 70px, Tablet: 90px, Desktop: 112px (28*4)
-                      "w-[70px] h-[70px] md:w-[90px] md:h-[90px] lg:w-28 lg:h-28",
-                      positionClasses[seat.position],
-                      seat.occupied
-                        ? "bg-slate-800/90 border-2 border-slate-600/50 cursor-not-allowed"
-                        : "bg-gradient-to-br from-emerald-700/60 to-emerald-800/60 border-2 border-emerald-500/50 hover:border-emerald-400 hover:from-emerald-600/70 hover:to-emerald-700/70 hover:scale-105 cursor-pointer shadow-lg shadow-emerald-500/20",
-                      selectedSeat === seat.id &&
-                        "ring-2 md:ring-4 ring-yellow-400 bg-gradient-to-br from-amber-600 to-amber-700 shadow-xl shadow-yellow-400/40 scale-105 md:scale-110 border-yellow-400",
-                    )}
-                  >
-                    {seat.occupied ? (
-                      // Occupied Seat - Mobile Optimized
-                      <div className="relative w-full h-full flex flex-col items-center justify-center p-1 md:p-2">
-                        <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-white font-bold text-sm md:text-base lg:text-lg border-2 border-slate-500 mb-0.5 md:mb-1 shadow-md">
-                          {seat.playerName?.charAt(0)}
-                        </div>
-                        <p className="text-[10px] md:text-xs font-semibold text-white truncate w-full text-center px-1">
-                          {seat.playerName}
-                        </p>
-                        <p className="text-[9px] md:text-[10px] text-slate-300">
-                          ${formatChips(seat.playerChips || 0)}
-                        </p>
-                        {seat.isVip && (
-                          <Crown className="absolute top-0.5 right-0.5 md:top-1 md:right-1 w-3 h-3 md:w-4 md:h-4 text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.8)]" />
-                        )}
-                      </div>
-                    ) : (
-                      // Available Seat - Mobile Optimized
-                      <div className="relative w-full h-full flex flex-col items-center justify-center">
-                        {selectedSeat === seat.id ? (
-                          <>
-                            <CheckCircle2 className="w-7 h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 text-yellow-400 mb-0.5 md:mb-1 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)]" />
-                            <p className="text-[10px] md:text-xs font-bold text-yellow-400">Selected</p>
-                          </>
-                        ) : (
-                          <>
-                            <Users className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 text-emerald-300 mb-0.5 md:mb-1" />
-                            <p className="text-[10px] md:text-xs font-bold text-white">Seat {seat.id}</p>
-                            <p className="text-[9px] md:text-[10px] text-emerald-300">Available</p>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* Arena */}
+      <div className="relative min-h-0 flex-1">
+        {/* Vertical felt */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(70%,480px)] w-[min(62%,240px)] -translate-x-1/2 -translate-y-1/2">
+          <div
+            className="h-full w-full rounded-[140px] border-[10px] border-[#3D3D3D] shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_0_40px_12px_rgba(0,0,0,0.45)]"
+            style={{
+              background: "radial-gradient(107.61% 56.47% at 50% 50%, #2E7D32 0%, #1B5E20 100%)",
+            }}
+          />
         </div>
 
-        {/* Footer - Mobile Optimized with brand colors */}
-        <div className="p-4 md:p-6 pt-3 md:pt-4 border-t border-amber-500/20 bg-gradient-to-br from-slate-800 to-slate-900">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between sm:items-center">
-            <div className="text-xs md:text-sm text-amber-400/80 order-2 sm:order-1">
-              {selectedSeat ? (
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-yellow-400" />
-                  <span>
-                    Selected: <span className="font-semibold text-yellow-400">Seat {selectedSeat}</span>
-                  </span>
-                </div>
-              ) : (
-                <span className="hidden sm:inline">Tap an available seat to select</span>
+        {/* Center label */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[min(200px,55%)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[#E5A93C]/20 bg-[#07090E]/75 px-3 py-2 text-center backdrop-blur-sm">
+          <p className="truncate text-sm font-bold text-[#E5A93C]">{table.name}</p>
+          <p className="text-[11px] text-slate-400">
+            {table.currentPlayers}/{table.maxPlayers} seated
+          </p>
+        </div>
+
+        {/* Seats */}
+        {seats.map((seat) => {
+          const isSelected = selectedSeat === seat.id
+          return (
+            <button
+              key={seat.id}
+              type="button"
+              disabled={seat.occupied}
+              onClick={() => !seat.occupied && setSelectedSeat(seat.id)}
+              className={cn(
+                "absolute z-20 flex h-[72px] w-[72px] flex-col items-center justify-center rounded-xl border transition active:scale-95 sm:h-20 sm:w-20",
+                positionClasses[seat.position],
+                seat.occupied && "cursor-not-allowed border-slate-700 bg-[#131A33] opacity-90",
+                !seat.occupied &&
+                  !isSelected &&
+                  "border-emerald-500/40 bg-[#151922] shadow-lg shadow-emerald-900/20",
+                isSelected &&
+                  "scale-105 border-[#E5A93C] bg-gradient-to-b from-[#E5A93C]/25 to-[#B87C20]/20 ring-2 ring-[#E5A93C]",
               )}
-            </div>
-            <div className="flex gap-2 order-1 sm:order-2">
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="flex-1 sm:flex-none min-w-[100px] h-11 md:h-10 bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white hover:border-slate-500 active:scale-95 transition-all"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={!selectedSeat}
-                className={cn(
-                  "flex-1 sm:flex-none min-w-[120px] h-11 md:h-10 font-bold transition-all active:scale-95",
-                  selectedSeat
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 shadow-lg shadow-yellow-500/30"
-                    : "bg-slate-700 text-slate-500 cursor-not-allowed",
-                )}
-              >
-                Confirm Seat
-              </Button>
-            </div>
-          </div>
+            >
+              {seat.occupied ? (
+                <>
+                  <div className="relative mb-0.5 flex h-8 w-8 items-center justify-center rounded-full border border-slate-600 bg-slate-700 text-xs font-bold text-white">
+                    {seat.playerName?.charAt(0)}
+                    {seat.isVip && (
+                      <Crown className="absolute -top-1 -right-1 h-3 w-3 text-[#E5A93C]" />
+                    )}
+                  </div>
+                  <p className="w-full truncate px-1 text-center text-[10px] font-semibold text-slate-200">
+                    {seat.playerName}
+                  </p>
+                  <p className="text-[9px] text-slate-500">${formatChips(seat.playerChips || 0)}</p>
+                </>
+              ) : isSelected ? (
+                <>
+                  <CheckCircle2 className="mb-0.5 h-7 w-7 text-[#E5A93C]" />
+                  <p className="text-[10px] font-bold text-[#E5A93C]">You</p>
+                </>
+              ) : (
+                <>
+                  <Users className="mb-0.5 h-6 w-6 text-emerald-400" />
+                  <p className="text-[10px] font-bold text-slate-100">Seat {seat.id}</p>
+                  <p className="text-[9px] text-emerald-400/80">Open</p>
+                </>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Footer */}
+      <footer className="shrink-0 border-t border-slate-800/70 bg-[#0C0F16] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <p className="mb-2 text-center text-[11px] text-slate-500">
+          {selectedSeat ? (
+            <span className="inline-flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#E5A93C]" />
+              Selected <span className="font-semibold text-[#E5A93C]">Seat {selectedSeat}</span>
+            </span>
+          ) : (
+            "Tap an open seat"
+          )}
+        </p>
+        <div className="mx-auto flex max-w-[430px] gap-2">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="h-12 flex-1 border-slate-700 bg-[#151922] text-slate-200 hover:bg-slate-800 hover:text-white"
+          >
+            Back
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedSeat}
+            className="h-12 flex-1 bg-gradient-to-b from-[#E5A93C] to-[#B87C20] font-bold text-[#020617] hover:opacity-95 disabled:opacity-40"
+          >
+            Sit Down
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </footer>
+    </div>
   )
 }
