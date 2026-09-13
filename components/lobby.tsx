@@ -28,6 +28,13 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   const [showSngLobby, setShowSngLobby] = useReactState(false)
   const [showStore, setShowStore] = useReactState(false)
 
+  const openTableSelection = (mode: string) => {
+    setSelectedGameMode(mode)
+    setSelectedTable(null)
+    setShowSeatSelection(false)
+    setShowTableSelection(true)
+  }
+
   const handleGameModeClick = (mode: string) => {
     if (mode === "3pin") return
     if (mode === "mtt") {
@@ -38,8 +45,8 @@ export default function Lobby({ onStartGame }: LobbyProps) {
       setShowSngLobby(true)
       return
     }
-    setSelectedGameMode(mode)
-    setShowTableSelection(true)
+    // cash | allin | omaha → stake table picker
+    openTableSelection(mode)
   }
 
   const handleTableSelect = (table: StakeTable) => {
@@ -49,8 +56,26 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   }
 
   const handleSeatSelect = (seatId: number) => {
-    if (selectedTable) {
-      onStartGame(selectedTable, seatId)
+    if (!selectedTable) return
+    onStartGame(selectedTable, seatId)
+    // Reset lobby pickers so returning to lobby is clean
+    setShowSeatSelection(false)
+    setSelectedTable(null)
+    setSelectedGameMode(null)
+  }
+
+  const handleCloseTableSelection = () => {
+    setShowTableSelection(false)
+    setSelectedGameMode(null)
+    setSelectedTable(null)
+  }
+
+  /** Back from seat map → same mode's table list */
+  const handleBackFromSeats = () => {
+    setShowSeatSelection(false)
+    setSelectedTable(null)
+    if (selectedGameMode) {
+      setShowTableSelection(true)
     }
   }
 
@@ -121,7 +146,6 @@ export default function Lobby({ onStartGame }: LobbyProps) {
 
   return (
     <div className="screen-mobile relative flex h-dvh w-full flex-col overflow-hidden bg-[#07090E]">
-      {/* Header */}
       <header className="flex shrink-0 items-center justify-end border-b border-slate-800/60 bg-[#1D1E28] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
         <Button
           size="sm"
@@ -133,7 +157,6 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         </Button>
       </header>
 
-      {/* Main — scrolls if needed on short phones */}
       <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto overscroll-contain px-4 py-6">
         <div className="mb-6 flex justify-center sm:mb-8">
           <Image
@@ -152,7 +175,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         >
           Play Now
         </Button>
-        <p className="mb-6 text-center text-xs text-white/60 sm:mb-8">Select your table</p>
+        <p className="mb-6 text-center text-xs text-white/60 sm:mb-8">Cash game · pick stakes</p>
 
         <div className="grid w-full max-w-[360px] grid-cols-2 gap-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <ModeTile
@@ -189,10 +212,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
       {selectedGameMode && (
         <TableSelection
           isOpen={showTableSelection}
-          onClose={() => {
-            setShowTableSelection(false)
-            setSelectedGameMode(null)
-          }}
+          onClose={handleCloseTableSelection}
           onSelectTable={handleTableSelect}
           gameMode={selectedGameMode}
           playerChips={playerChips}
@@ -202,10 +222,7 @@ export default function Lobby({ onStartGame }: LobbyProps) {
       {selectedTable && (
         <SeatSelection
           isOpen={showSeatSelection}
-          onClose={() => {
-            setShowSeatSelection(false)
-            setSelectedTable(null)
-          }}
+          onClose={handleBackFromSeats}
           onSelectSeat={handleSeatSelect}
           table={selectedTable}
         />
