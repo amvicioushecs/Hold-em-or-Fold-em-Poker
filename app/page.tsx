@@ -12,7 +12,7 @@ export default function Home() {
         <TournamentProvider>
           <PokerGameProvider>
             <AIOpponents />
-            <main className="min-h-screen bg-background">
+            <main className="screen-mobile relative w-full min-h-dvh bg-[#07090E]">
               <PokerTable />
             </main>
           </PokerGameProvider>
