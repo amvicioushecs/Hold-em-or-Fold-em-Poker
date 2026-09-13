@@ -3,10 +3,19 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Plus, Minus, ArrowLeft, Settings, Mic, MessageSquare } from "lucide-react"
+import {
+  Plus,
+  Minus,
+  ArrowLeft,
+  Settings,
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  MessageSquare,
+} from "lucide-react"
 import PlayerPosition from "./player-position"
 import CommunityCards from "./community-cards"
-import VideoControls from "./video-controls"
 import ChatPanel from "./chat-panel"
 import GameMenu from "./game-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -30,7 +39,15 @@ export default function PokerTable() {
   const [selectedSeat, setSelectedSeat] = useState<number>(4)
   const [localTimeLeft, setLocalTimeLeft] = useState(30)
 
-  const { players, roomCode, myUserId } = useWebRTC()
+  const {
+    players,
+    roomCode,
+    myUserId,
+    isVideoEnabled,
+    isAudioEnabled,
+    toggleVideo,
+    toggleAudio,
+  } = useWebRTC()
   const { sendMessage } = useChat()
   const {
     gameState,
@@ -42,7 +59,7 @@ export default function PokerTable() {
     smallBlind: liveSmallBlind,
     bigBlind: liveBigBlind,
   } = usePokerGame()
-  const { currentBlindLevel, timeUntilNextLevel, tournament } = useTournament()
+  const { currentBlindLevel, timeUntilNextLevel } = useTournament()
   const [playerIds, setPlayerIds] = useState<string[]>([])
 
   const calculatedPlayerIds = useMemo(() => {
@@ -154,7 +171,6 @@ export default function PokerTable() {
     return () => clearInterval(interval)
   }, [isLocalPlayerTurn, turnDuration, handleTimeUp, gameState])
 
-  // Keep raise slider seeded to min when turn starts
   useEffect(() => {
     if (isLocalPlayerTurn) {
       setRaiseAmount([Math.max(minRaise, displayBigBlind)])
@@ -232,24 +248,27 @@ export default function PokerTable() {
 
   const tableTitle = selectedTable?.name || "Table"
 
+  const iconBtn =
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors touch-manipulation"
+
   return (
     <div className="relative w-full h-[100dvh] max-w-[430px] mx-auto bg-[#07090E] overflow-hidden shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]">
       {/* —— HeaderSection —— */}
-      <header className="absolute top-0 left-0 right-0 z-40 flex h-[68px] items-center justify-between px-4 pt-4 pb-3 bg-gradient-to-b from-[rgba(7,9,14,0.95)] via-[rgba(7,9,14,0.8)] to-transparent">
+      <header className="absolute top-0 left-0 right-0 z-40 flex h-[68px] items-center justify-between gap-2 px-3 pt-4 pb-3 bg-gradient-to-b from-[rgba(7,9,14,0.95)] via-[rgba(7,9,14,0.8)] to-transparent">
         <button
           type="button"
           onClick={() => setShowLobby(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/40 bg-[rgba(25,28,34,0.8)] text-slate-300"
+          className={cn(iconBtn, "border-slate-700/40 bg-[rgba(25,28,34,0.8)] text-slate-300")}
           aria-label="Exit table"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
 
-        <div className="flex min-w-0 flex-col items-center px-2">
-          <h1 className="truncate text-center text-base font-bold uppercase tracking-[0.8px] text-[#E5A93C] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+        <div className="min-w-0 flex-1 flex flex-col items-center px-1">
+          <h1 className="max-w-full truncate text-center text-[15px] font-bold uppercase tracking-[0.8px] text-[#E5A93C] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
             {tableTitle}
           </h1>
-          <p className="text-xs font-medium tracking-[0.3px] text-slate-400">
+          <p className="truncate text-[11px] font-medium tracking-[0.3px] text-slate-400">
             Blinds: ${displaySmallBlind}/${displayBigBlind}
             {currentBlindLevel?.ante ? ` · Ante ${currentBlindLevel.ante}` : ""}
             {isTournamentMode && gameState?.blindLevel != null ? ` · L${gameState.blindLevel}` : ""}
@@ -257,35 +276,65 @@ export default function PokerTable() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Utility: Chat · Video · Mic · Settings */}
+        <div className="flex shrink-0 items-center gap-1.5">
           <button
             type="button"
             onClick={() => setIsChatOpen((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/60 bg-[#191C22] text-slate-300"
+            className={cn(
+              iconBtn,
+              isChatOpen
+                ? "border-[#E5A93C]/50 bg-[#E5A93C]/15 text-[#E5A93C]"
+                : "border-slate-700/60 bg-[#191C22] text-slate-300",
+            )}
             aria-label="Chat"
+            aria-pressed={isChatOpen}
           >
-            <MessageSquare className="h-5 w-5" />
+            <MessageSquare className="h-4 w-4" />
           </button>
+
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/60 bg-[#191C22] text-slate-300"
-            aria-label="Microphone"
+            onClick={toggleVideo}
+            className={cn(
+              iconBtn,
+              isVideoEnabled
+                ? "border-slate-700/60 bg-[#191C22] text-slate-200"
+                : "border-red-500/40 bg-red-500/15 text-red-400",
+            )}
+            aria-label={isVideoEnabled ? "Turn camera off" : "Turn camera on"}
+            aria-pressed={isVideoEnabled}
           >
-            <Mic className="h-5 w-5" />
+            {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
           </button>
+
+          <button
+            type="button"
+            onClick={toggleAudio}
+            className={cn(
+              iconBtn,
+              isAudioEnabled
+                ? "border-slate-700/60 bg-[#191C22] text-slate-200"
+                : "border-red-500/40 bg-red-500/15 text-red-400",
+            )}
+            aria-label={isAudioEnabled ? "Mute microphone" : "Unmute microphone"}
+            aria-pressed={isAudioEnabled}
+          >
+            {isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+          </button>
+
           <button
             type="button"
             onClick={() => setIsMenuOpen(true)}
-            className="flex h-8 w-8 items-center justify-center text-slate-400"
+            className={cn(iconBtn, "border-slate-700/60 bg-[#191C22] text-slate-400")}
             aria-label="Settings"
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="h-4 w-4" />
           </button>
         </div>
       </header>
 
       <GameMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-      <VideoControls />
 
       {isChatOpen && (
         <div className="absolute top-[72px] right-3 z-50 w-[min(320px,90vw)]">
@@ -296,7 +345,6 @@ export default function PokerTable() {
       {/* —— TableArenaSection —— */}
       <div className="absolute left-0 right-0 top-[71px] bottom-[91px] flex items-center justify-center">
         <div className="relative h-full w-full max-w-[390px]">
-          {/* Vertical felt */}
           <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[min(516px,72%)] w-[min(233px,60%)] -translate-x-1/2 -translate-y-1/2">
             <div
               className="h-full w-full rounded-[150px] border-[12px] border-[#3D3D3D] shadow-[0px_20px_50px_rgba(0,0,0,0.8),inset_0px_0px_50px_12px_rgba(0,0,0,0.5)]"
@@ -306,7 +354,6 @@ export default function PokerTable() {
             />
           </div>
 
-          {/* Pot badge — above board */}
           {gameState && (
             <div className="absolute left-1/2 top-[28%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl border border-[rgba(254,185,86,0.15)] bg-[rgba(49,56,82,0.24)] px-6 py-2 backdrop-blur-[10px]">
               <span className="text-[9px] font-bold uppercase tracking-[0.9px] text-[#C6C6CE]">Total Pot</span>
@@ -316,17 +363,14 @@ export default function PokerTable() {
             </div>
           )}
 
-          {/* Community cards */}
           {gameState && (
             <div className="absolute left-1/2 top-[42%] z-30 -translate-x-1/2 -translate-y-1/2">
               <CommunityCards />
             </div>
           )}
 
-          {/* Dealer */}
           {gameState?.dealerSeatNumber != null && <DealerButton seatNumber={gameState.dealerSeatNumber} />}
 
-          {/* Seats */}
           {playerIds.map((playerId) => (
             <PlayerPosition
               key={playerId}
@@ -350,7 +394,7 @@ export default function PokerTable() {
         </div>
       </div>
 
-      {/* —— Footer ActionControlsSection (thumb reach) —— */}
+      {/* —— Footer ActionControlsSection —— */}
       <footer className="absolute bottom-0 left-0 right-0 z-40 border-t border-slate-800/60 bg-gradient-to-t from-[#07090E] via-[#0C0F16] to-[rgba(12,15,22,0.9)] px-4 pb-4 pt-2">
         <div className="mx-auto flex w-full max-w-[358px] gap-2.5">
           <button
