@@ -63,7 +63,6 @@ export default function Lobby({ onStartGame }: LobbyProps) {
     }
   }
 
-  // Keep handler referenced for future lucky-wheel wiring
   void handlePrizeWon
 
   const handleStartTournament = (tournamentId: string) => {
@@ -121,112 +120,70 @@ export default function Lobby({ onStartGame }: LobbyProps) {
   }
 
   return (
-    <div className="relative w-full h-[100dvh] overflow-hidden bg-gradient-to-b from-background via-background to-background">
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60" />
+    <div className="screen-mobile relative flex h-dvh w-full flex-col overflow-hidden bg-[#07090E]">
+      {/* Header */}
+      <header className="flex shrink-0 items-center justify-end border-b border-slate-800/60 bg-[#1D1E28] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <Button
+          size="sm"
+          onClick={() => setShowStore(true)}
+          className="h-10 touch-target border border-slate-500/40 bg-blue-600 px-3 text-white hover:bg-blue-500"
+        >
+          <Sparkles className="mr-1.5 h-4 w-4" />
+          <span className="text-sm font-semibold">Store</span>
+        </Button>
+      </header>
 
-      <div className="relative z-10 flex flex-col h-full max-w-7xl mx-auto">
-        {/* Header — Store only */}
-        <div className="flex items-center justify-end p-3 md:p-4 border-b border-border/50 backdrop-blur-sm bg-[rgba(29,30,40,1)]">
-          <Button
-            size="sm"
-            onClick={() => setShowStore(true)}
-            className="hover:bg-chart-1/90 bg-blue-600 border-[3px] border-slate-300 text-white shadow-md"
-          >
-            <Sparkles className="w-4 h-4 mr-1.5" />
-            <span className="text-xs md:text-sm">Store</span>
-          </Button>
+      {/* Main — scrolls if needed on short phones */}
+      <div className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto overscroll-contain px-4 py-6">
+        <div className="mb-6 flex justify-center sm:mb-8">
+          <Image
+            src="/logo.png"
+            alt="Hold'em or Fold'em Poker Logo"
+            width={200}
+            height={200}
+            priority
+            className="h-28 w-28 object-contain drop-shadow-2xl sm:h-36 sm:w-36"
+          />
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6 overflow-y-auto bg-[rgba(5,5,10,1)]">
-          <div className="flex justify-center mb-6 md:mb-8">
-            <Image
-              src="/logo.png"
-              alt="Hold'em or Fold'em Poker Logo"
-              width={200}
-              height={200}
-              className="w-32 h-32 md:w-48 md:h-48 lg:w-56 lg:h-56 drop-shadow-2xl"
-            />
-          </div>
+        <Button
+          onClick={() => handleGameModeClick("cash")}
+          className="mb-2 h-14 w-full max-w-[320px] touch-target rounded-full border-2 border-slate-400 bg-slate-600 text-lg font-bold text-[#070604] shadow-xl transition active:scale-[0.98] sm:h-16 sm:text-xl"
+        >
+          Play Now
+        </Button>
+        <p className="mb-6 text-center text-xs text-white/60 sm:mb-8">Select your table</p>
 
-          <Button
-            onClick={() => handleGameModeClick("cash")}
-            className="w-full max-w-xs h-14 md:h-16 hover:bg-chart-4/90 text-xl md:text-2xl font-bold rounded-full shadow-2xl transform hover:scale-105 transition-all mb-2 bg-slate-600 border-2 shadow-lg opacity-100 border-slate-300 text-[rgba(7,6,4,1)]"
-          >
-            Play Now
-          </Button>
-          <p className="text-center text-white/70 text-xs md:text-sm mb-8 md:mb-10">Select your table</p>
-
-          <div className="w-full max-w-4xl grid grid-cols-2 gap-3 md:gap-4">
-            <Button
-              onClick={() => handleGameModeClick("sng")}
-              className={cn(
-                "h-20 md:h-24 bg-chart-1/20 hover:bg-chart-1/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-1/50",
-                selectedGameMode === "sng" && "ring-2 md:ring-4 ring-chart-4",
-              )}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-              <div className="relative z-10">
-                <Trophy className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-1" />
-                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">SNG</h3>
-                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
-                  OPEN
-                </span>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleGameModeClick("mtt")}
-              className={cn(
-                "h-20 md:h-24 bg-chart-5/20 hover:bg-chart-5/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-5/50",
-                selectedGameMode === "mtt" && "ring-2 md:ring-4 ring-chart-4",
-              )}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-              <div className="relative z-10">
-                <Users className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-5" />
-                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">MTT</h3>
-                <span className="inline-block bg-chart-3 text-primary text-xs md:text-sm px-2 md:px-3 py-0.5 md:py-1 rounded-full font-bold">
-                  OPEN
-                </span>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleGameModeClick("allin")}
-              className={cn(
-                "h-20 md:h-24 bg-chart-4/20 hover:bg-chart-4/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-4/50",
-                selectedGameMode === "allin" && "ring-2 md:ring-4 ring-chart-4",
-              )}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-              <div className="relative z-10">
-                <Sparkles className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-4" />
-                <p className="text-[10px] md:text-xs text-chart-4/80">Jackpot</p>
-                <h3 className="text-xs md:text-lg lg:text-xl font-bold text-chart-4 drop-shadow-lg leading-tight">
-                  ALL IN OR FOLD
-                </h3>
-                <p className="text-[9px] md:text-xs text-chart-4/80 mt-0.5">6,984,016.13</p>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleGameModeClick("omaha")}
-              className={cn(
-                "h-20 md:h-24 bg-chart-2/20 hover:bg-chart-2/30 rounded-xl md:rounded-2xl relative overflow-hidden border-2 md:border-4 border-chart-2/50",
-                selectedGameMode === "omaha" && "ring-2 md:ring-4 ring-chart-4",
-              )}
-            >
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent" />
-              <div className="relative z-10">
-                <Star className="w-5 h-5 md:w-6 md:h-6 mx-auto mb-0.5 md:mb-1 text-chart-2" />
-                <h3 className="text-xl md:text-3xl font-bold text-chart-4 drop-shadow-lg mb-0.5 md:mb-1">OMAHA</h3>
-              </div>
-            </Button>
-          </div>
+        <div className="grid w-full max-w-[360px] grid-cols-2 gap-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <ModeTile
+            active={selectedGameMode === "sng"}
+            onClick={() => handleGameModeClick("sng")}
+            icon={<Trophy className="mx-auto mb-1 h-5 w-5 text-[#E5A93C]" />}
+            title="SNG"
+            badge="OPEN"
+          />
+          <ModeTile
+            active={selectedGameMode === "mtt"}
+            onClick={() => handleGameModeClick("mtt")}
+            icon={<Users className="mx-auto mb-1 h-5 w-5 text-cyan-400" />}
+            title="MTT"
+            badge="OPEN"
+          />
+          <ModeTile
+            active={selectedGameMode === "allin"}
+            onClick={() => handleGameModeClick("allin")}
+            icon={<Sparkles className="mx-auto mb-0.5 h-5 w-5 text-[#FEB956]" />}
+            title="ALL IN OR FOLD"
+            subtitle="Jackpot · 6,984,016"
+            compactTitle
+          />
+          <ModeTile
+            active={selectedGameMode === "omaha"}
+            onClick={() => handleGameModeClick("omaha")}
+            icon={<Star className="mx-auto mb-1 h-5 w-5 text-emerald-400" />}
+            title="OMAHA"
+          />
         </div>
-
-        <div className="border-t border-border/50 backdrop-blur-sm p-3 md:p-4 bg-[rgba(21,22,33,0.91)]" />
       </div>
 
       {selectedGameMode && (
@@ -254,5 +211,53 @@ export default function Lobby({ onStartGame }: LobbyProps) {
         />
       )}
     </div>
+  )
+}
+
+function ModeTile({
+  onClick,
+  active,
+  icon,
+  title,
+  badge,
+  subtitle,
+  compactTitle,
+}: {
+  onClick: () => void
+  active?: boolean
+  icon: React.ReactNode
+  title: string
+  badge?: string
+  subtitle?: string
+  compactTitle?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative flex h-[88px] w-full flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-700/80 bg-[#151922] px-2 transition active:scale-[0.98] sm:h-24",
+        active && "ring-2 ring-[#E5A93C]",
+      )}
+    >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      <div className="relative z-10 text-center">
+        {icon}
+        <h3
+          className={cn(
+            "font-bold leading-tight text-[#E5A93C] drop-shadow",
+            compactTitle ? "text-[11px] sm:text-sm" : "text-xl sm:text-2xl",
+          )}
+        >
+          {title}
+        </h3>
+        {subtitle && <p className="mt-0.5 text-[9px] text-slate-400">{subtitle}</p>}
+        {badge && (
+          <span className="mt-1 inline-block rounded-full bg-emerald-600/90 px-2 py-0.5 text-[10px] font-bold text-white">
+            {badge}
+          </span>
+        )}
+      </div>
+    </button>
   )
 }
