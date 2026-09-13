@@ -252,9 +252,8 @@ export default function PokerTable() {
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors touch-manipulation"
 
   return (
-    <div className="relative w-full h-[100dvh] max-w-[430px] mx-auto bg-[#07090E] overflow-hidden shadow-[0px_25px_50px_-12px_rgba(0,0,0,0.25)]">
-      {/* —— HeaderSection —— */}
-      <header className="absolute top-0 left-0 right-0 z-40 flex h-[68px] items-center justify-between gap-2 px-3 pt-4 pb-3 bg-gradient-to-b from-[rgba(7,9,14,0.95)] via-[rgba(7,9,14,0.8)] to-transparent">
+    <div className="poker-table relative h-dvh w-full overflow-hidden bg-[#07090E]">
+      <header className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between gap-1.5 px-2.5 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] bg-gradient-to-b from-[rgba(7,9,14,0.95)] via-[rgba(7,9,14,0.8)] to-transparent">
         <button
           type="button"
           onClick={() => setShowLobby(true)}
@@ -265,10 +264,10 @@ export default function PokerTable() {
         </button>
 
         <div className="min-w-0 flex-1 flex flex-col items-center px-1">
-          <h1 className="max-w-full truncate text-center text-[15px] font-bold uppercase tracking-[0.8px] text-[#E5A93C] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+          <h1 className="max-w-full truncate text-center text-[14px] font-bold uppercase tracking-[0.8px] text-[#E5A93C] drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-[15px]">
             {tableTitle}
           </h1>
-          <p className="truncate text-[11px] font-medium tracking-[0.3px] text-slate-400">
+          <p className="max-w-full truncate text-[10px] font-medium tracking-[0.3px] text-slate-400 sm:text-[11px]">
             Blinds: ${displaySmallBlind}/${displayBigBlind}
             {currentBlindLevel?.ante ? ` · Ante ${currentBlindLevel.ante}` : ""}
             {isTournamentMode && gameState?.blindLevel != null ? ` · L${gameState.blindLevel}` : ""}
@@ -276,8 +275,7 @@ export default function PokerTable() {
           </p>
         </div>
 
-        {/* Utility: Chat · Video · Mic · Settings */}
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => setIsChatOpen((v) => !v)}
@@ -337,17 +335,16 @@ export default function PokerTable() {
       <GameMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       {isChatOpen && (
-        <div className="absolute top-[72px] right-3 z-50 w-[min(320px,90vw)]">
+        <div className="absolute top-[calc(4rem+env(safe-area-inset-top))] right-2 z-50 w-[min(300px,calc(100vw-1rem))]">
           <ChatPanel />
         </div>
       )}
 
-      {/* —— TableArenaSection —— */}
-      <div className="absolute left-0 right-0 top-[71px] bottom-[91px] flex items-center justify-center">
-        <div className="relative h-full w-full max-w-[390px]">
-          <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[min(516px,72%)] w-[min(233px,60%)] -translate-x-1/2 -translate-y-1/2">
+      <div className="absolute left-0 right-0 top-[calc(4.25rem+env(safe-area-inset-top))] bottom-[calc(5.5rem+env(safe-area-inset-bottom))] flex items-center justify-center">
+        <div className="relative h-full w-full">
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 h-[min(516px,72%)] w-[min(233px,58%)] -translate-x-1/2 -translate-y-1/2">
             <div
-              className="h-full w-full rounded-[150px] border-[12px] border-[#3D3D3D] shadow-[0px_20px_50px_rgba(0,0,0,0.8),inset_0px_0px_50px_12px_rgba(0,0,0,0.5)]"
+              className="h-full w-full rounded-[150px] border-[10px] border-[#3D3D3D] shadow-[0px_20px_50px_rgba(0,0,0,0.8),inset_0px_0px_50px_12px_rgba(0,0,0,0.5)] sm:border-[12px]"
               style={{
                 background: "radial-gradient(107.61% 56.47% at 50% 50%, #2E7D32 0%, #1B5E20 100%)",
               }}
@@ -355,9 +352,9 @@ export default function PokerTable() {
           </div>
 
           {gameState && (
-            <div className="absolute left-1/2 top-[28%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl border border-[rgba(254,185,86,0.15)] bg-[rgba(49,56,82,0.24)] px-6 py-2 backdrop-blur-[10px]">
+            <div className="absolute left-1/2 top-[26%] z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-xl border border-[rgba(254,185,86,0.15)] bg-[rgba(49,56,82,0.24)] px-5 py-1.5 backdrop-blur-[10px] sm:px-6 sm:py-2">
               <span className="text-[9px] font-bold uppercase tracking-[0.9px] text-[#C6C6CE]">Total Pot</span>
-              <span className="text-xl font-extrabold leading-7 text-[#FEB956]">
+              <span className="text-lg font-extrabold leading-7 text-[#FEB956] sm:text-xl">
                 ${(gameState.pot || 0).toLocaleString(undefined, { minimumFractionDigits: 0 })}
               </span>
             </div>
@@ -382,7 +379,7 @@ export default function PokerTable() {
           {players.has("local") && <PlayerPosition playerId="local" position="bottom" showCards={true} />}
 
           {!gameState && players.size < 2 && (
-            <div className="absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-500/20 bg-[#131A33]/95 px-6 py-4 shadow-2xl backdrop-blur-md">
+            <div className="absolute left-1/2 top-1/2 z-30 w-[min(280px,85%)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-amber-500/20 bg-[#131A33]/95 px-5 py-4 shadow-2xl backdrop-blur-md">
               <p className="text-center text-sm font-extrabold uppercase tracking-wide text-[#E5A93C]">
                 Waiting for players...
                 <span className="mt-1 block text-xs font-semibold normal-case text-slate-400">
@@ -394,15 +391,14 @@ export default function PokerTable() {
         </div>
       </div>
 
-      {/* —— Footer ActionControlsSection —— */}
-      <footer className="absolute bottom-0 left-0 right-0 z-40 border-t border-slate-800/60 bg-gradient-to-t from-[#07090E] via-[#0C0F16] to-[rgba(12,15,22,0.9)] px-4 pb-4 pt-2">
-        <div className="mx-auto flex w-full max-w-[358px] gap-2.5">
+      <footer className="absolute bottom-0 left-0 right-0 z-40 border-t border-slate-800/60 bg-gradient-to-t from-[#07090E] via-[#0C0F16] to-[rgba(12,15,22,0.9)] px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex w-full gap-2">
           <button
             type="button"
             disabled={actionDisabled}
             onClick={handleFold}
             className={cn(
-              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-sm font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity",
+              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-xs font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity sm:text-sm",
               actionDisabled && "opacity-40",
             )}
           >
@@ -414,7 +410,7 @@ export default function PokerTable() {
             disabled={actionDisabled}
             onClick={handleCall}
             className={cn(
-              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-sm font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity",
+              "flex h-12 flex-1 items-center justify-center rounded-xl border border-slate-700/80 bg-[#151922] text-xs font-bold uppercase tracking-[0.7px] text-slate-200 transition-opacity sm:text-sm",
               actionDisabled && "opacity-40",
             )}
           >
@@ -428,14 +424,14 @@ export default function PokerTable() {
                   type="button"
                   disabled={actionDisabled || !canRaise}
                   className={cn(
-                    "relative flex h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-b from-[#E5A93C] to-[#B87C20] text-sm font-bold uppercase tracking-[0.7px] text-[#020617] shadow-[0px_10px_15px_-3px_rgba(120,53,15,0.3),0px_4px_6px_-4px_rgba(120,53,15,0.3)] transition-opacity",
+                    "relative flex h-12 flex-1 items-center justify-center rounded-xl bg-gradient-to-b from-[#E5A93C] to-[#B87C20] text-xs font-bold uppercase tracking-[0.7px] text-[#020617] shadow-[0px_10px_15px_-3px_rgba(120,53,15,0.3)] transition-opacity sm:text-sm",
                     (actionDisabled || !canRaise) && "opacity-40",
                   )}
                 >
                   Raise ${raiseAmount[0]}
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="h-[300px] border-slate-800 bg-[#0C0F16]">
+              <SheetContent side="bottom" className="h-[min(300px,50dvh)] border-slate-800 bg-[#0C0F16] pb-safe">
                 <SheetHeader>
                   <SheetTitle className="text-white">Raise Amount</SheetTitle>
                 </SheetHeader>
