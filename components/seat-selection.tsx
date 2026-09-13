@@ -28,10 +28,31 @@ function formatChips(amount: number): string {
   return amount.toString()
 }
 
+function modeBanner(gameMode: StakeTable["gameMode"]) {
+  switch (gameMode) {
+    case "allin":
+      return {
+        className: "border-amber-500/20 bg-amber-500/10 text-amber-200/90",
+        text: "All-in or Fold — Fold or shove only once the hand starts",
+      }
+    case "omaha":
+      return {
+        className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200/90",
+        text: "Omaha — 4 hole cards; use exactly 2 with 3 from the board",
+      }
+    case "cash":
+      return {
+        className: "border-slate-700/50 bg-slate-900/40 text-slate-400",
+        text: "Cash game — standard No-Limit Hold'em",
+      }
+    default:
+      return null
+  }
+}
+
 export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: SeatSelectionProps) {
   const [selectedSeat, setSelectedSeat] = useState<number | null>(null)
 
-  // Stable mock occupancy for the session (avoid re-random on re-render)
   const seats: Seat[] = useMemo(
     () => [
       { id: 1, position: "top", occupied: true, playerName: "Alex K.", playerChips: 45000 },
@@ -54,24 +75,23 @@ export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: 
   }
 
   const availableSeats = seats.filter((s) => !s.occupied).length
+  const banner = modeBanner(table.gameMode)
 
   if (!isOpen) return null
 
   const handleConfirm = () => {
     if (!selectedSeat) return
     onSelectSeat(selectedSeat)
-    onClose()
   }
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col bg-[#07090E]">
-      {/* Header */}
       <header className="flex shrink-0 items-center gap-3 border-b border-slate-800/70 bg-[#0C0F16] px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"
           onClick={onClose}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700/50 bg-[#191C22] text-slate-300"
-          aria-label="Back"
+          aria-label="Back to tables"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -95,9 +115,13 @@ export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: 
         </button>
       </header>
 
-      {/* Arena */}
+      {banner && (
+        <div className={cn("shrink-0 border-b px-4 py-2 text-center text-[11px]", banner.className)}>
+          {banner.text}
+        </div>
+      )}
+
       <div className="relative min-h-0 flex-1">
-        {/* Vertical felt */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(70%,480px)] w-[min(62%,240px)] -translate-x-1/2 -translate-y-1/2">
           <div
             className="h-full w-full rounded-[140px] border-[10px] border-[#3D3D3D] shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_0_40px_12px_rgba(0,0,0,0.45)]"
@@ -107,15 +131,17 @@ export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: 
           />
         </div>
 
-        {/* Center label */}
         <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 w-[min(200px,55%)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-[#E5A93C]/20 bg-[#07090E]/75 px-3 py-2 text-center backdrop-blur-sm">
           <p className="truncate text-sm font-bold text-[#E5A93C]">{table.name}</p>
           <p className="text-[11px] text-slate-400">
-            {table.currentPlayers}/{table.maxPlayers} seated
+            {table.gameMode === "allin"
+              ? "All-in or Fold"
+              : table.gameMode === "omaha"
+                ? "Omaha"
+                : "No-Limit Hold'em"}
           </p>
         </div>
 
-        {/* Seats */}
         {seats.map((seat) => {
           const isSelected = selectedSeat === seat.id
           return (
@@ -165,13 +191,19 @@ export default function SeatSelection({ isOpen, onClose, onSelectSeat, table }: 
         })}
       </div>
 
-      {/* Footer */}
       <footer className="shrink-0 border-t border-slate-800/70 bg-[#0C0F16] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <p className="mb-2 text-center text-[11px] text-slate-500">
           {selectedSeat ? (
             <span className="inline-flex items-center gap-1.5">
               <CheckCircle2 className="h-3.5 w-3.5 text-[#E5A93C]" />
               Selected <span className="font-semibold text-[#E5A93C]">Seat {selectedSeat}</span>
+              <span className="text-slate-600">·</span>
+              Buy-in{" "}
+              <span className="font-semibold text-[#FEB956]">
+                {table.minBuyIn === table.maxBuyIn
+                  ? formatChips(table.minBuyIn)
+                  : `${formatChips(table.minBuyIn)}+`}
+              </span>
             </span>
           ) : (
             "Tap an open seat"
