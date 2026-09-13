@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Users, TrendingUp, Lock, CheckCircle2, Coins, ChevronLeft, ChevronRight, Grid3x3, List } from "lucide-react"
+import { Users, Lock, CheckCircle2, Coins, ArrowLeft, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { GameMode } from "@/types/poker"
 
@@ -20,7 +18,7 @@ export interface StakeTable {
   maxPlayers: number
   isVip: boolean
   difficulty: "Beginner" | "Intermediate" | "Advanced" | "Expert"
-  gameMode: GameMode // Add gameMode to table definition
+  gameMode: GameMode
 }
 
 interface TableSelectionProps {
@@ -31,35 +29,59 @@ interface TableSelectionProps {
   playerChips: number
 }
 
-export default function TableSelection({ isOpen, onClose, onSelectTable, gameMode, playerChips }: TableSelectionProps) {
+function mapMode(gameMode: string): GameMode {
+  if (gameMode === "sng" || gameMode === "mtt" || gameMode === "allin" || gameMode === "cash" || gameMode === "omaha") {
+    return gameMode
+  }
+  return "cash"
+}
+
+function modeLabel(gameMode: string) {
+  switch (gameMode) {
+    case "sng":
+      return "Sit & Go"
+    case "mtt":
+      return "Tournament"
+    case "allin":
+      return "All-in or Fold"
+    case "omaha":
+      return "Omaha"
+    default:
+      return "Cash Game"
+  }
+}
+
+function formatChips(amount: number): string {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(2)}M`
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1)}K`
+  return amount.toString()
+}
+
+function difficultyClass(difficulty: string): string {
+  switch (difficulty) {
+    case "Beginner":
+      return "bg-emerald-500/15 text-emerald-400 border-emerald-500/25"
+    case "Intermediate":
+      return "bg-blue-500/15 text-blue-400 border-blue-500/25"
+    case "Advanced":
+      return "bg-amber-500/15 text-amber-400 border-amber-500/25"
+    case "Expert":
+      return "bg-rose-500/15 text-rose-400 border-rose-500/25"
+    default:
+      return "bg-slate-800 text-slate-400 border-slate-700"
+  }
+}
+
+export default function TableSelection({
+  isOpen,
+  onClose,
+  onSelectTable,
+  gameMode,
+  playerChips,
+}: TableSelectionProps) {
   const [selectedTable, setSelectedTable] = useState<StakeTable | null>(null)
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [isMobile, setIsMobile] = useState(false)
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const mappedGameMode = mapMode(gameMode)
 
-  // Check if mobile on mount and resize
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
-  }, [])
-
-  const mappedGameMode: GameMode =
-    gameMode === "sng"
-      ? "sng"
-      : gameMode === "mtt"
-        ? "mtt"
-        : gameMode === "allin"
-          ? "allin"
-          : gameMode === "cash"
-            ? "cash"
-            : "omaha"
-
-  // Define different stake tables based on game mode
   const tables: StakeTable[] = [
     {
       id: "micro-1",
@@ -180,345 +202,154 @@ export default function TableSelection({ isOpen, onClose, onSelectTable, gameMod
     },
   ]
 
-  const formatChips = (amount: number): string => {
-    if (amount >= 1000000) {
-      return `${(amount / 1000000).toFixed(2)}M`
-    } else if (amount >= 1000) {
-      return `${(amount / 1000).toFixed(1)}K`
-    }
-    return amount.toString()
-  }
+  if (!isOpen) return null
 
-  const canAffordTable = (table: StakeTable): boolean => {
-    return playerChips >= table.minBuyIn
-  }
-
-  const getDifficultyColor = (difficulty: string): string => {
-    switch (difficulty) {
-      case "Beginner":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-      case "Intermediate":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20"
-      case "Advanced":
-        return "bg-amber-500/10 text-amber-400 border-amber-500/20"
-      case "Expert":
-        return "bg-rose-500/10 text-rose-400 border-rose-500/20"
-      default:
-        return "bg-slate-800 text-slate-400 border-slate-700"
-    }
-  }
-
-  const handleSelectTable = (table: StakeTable) => {
-    if (!canAffordTable(table)) {
-      return
-    }
-    setSelectedTable(table)
-  }
+  const canAfford = (t: StakeTable) => playerChips >= t.minBuyIn
 
   const handleConfirm = () => {
-    if (selectedTable) {
-      onSelectTable(selectedTable)
-      onClose()
-    }
-  }
-
-  const scroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      const scrollAmount = 300
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      })
-    }
-  }
-
-  // Render table card in grid view
-  const renderGridCard = (table: StakeTable) => {
-    const canAfford = canAffordTable(table)
-    const isSelected = selectedTable?.id === table.id
-    const isFull = table.currentPlayers >= table.maxPlayers
-
-    return (
-      <button
-        key={table.id}
-        onClick={() => handleSelectTable(table)}
-        disabled={!canAfford || isFull}
-        className={cn(
-          "relative p-4 rounded-xl border-2 transition-all text-left",
-          "hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed",
-          "min-w-[280px] md:min-w-0",
-          "backdrop-blur-sm",
-          isSelected
-            ? "border-[#FEB956] bg-gradient-to-br from-[#FEB956]/15 via-amber-500/5 to-slate-900/40 shadow-xl shadow-[#FEB956]/10"
-            : "border-slate-800 bg-gradient-to-br from-slate-900/90 to-slate-950/90 hover:border-[#FEB956]/50 hover:shadow-lg hover:shadow-[#FEB956]/5",
-          !canAfford && "border-red-950 bg-gradient-to-br from-red-950/20 to-slate-950/90",
-        )}
-      >
-        {/* VIP Badge */}
-        {table.isVip && (
-          <div className="absolute top-2 right-2">
-            <Badge className="bg-gradient-to-r from-[#FEB956] to-amber-500 text-slate-950 border-0 text-xs font-bold shadow-lg">
-              <Lock className="w-3 h-3 mr-1" />
-              VIP
-            </Badge>
-          </div>
-        )}
-
-        {/* Selected Indicator */}
-        {isSelected && (
-          <div className="absolute top-2 left-2">
-            <CheckCircle2 className="w-5 h-5 text-[#FEB956] drop-shadow-lg" />
-          </div>
-        )}
-
-        {/* Table Name */}
-        <h3 className={cn("text-base md:text-lg font-bold mb-3 pr-12 drop-shadow-md", isSelected ? "text-[#FEB956]" : "text-slate-100")}>{table.name}</h3>
-
-        {/* Blinds */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs md:text-sm text-slate-400">Blinds:</span>
-          <span className={cn("text-xs md:text-sm font-semibold", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
-            {formatChips(table.smallBlind)}/{formatChips(table.bigBlind)}
-          </span>
-        </div>
-
-        {/* Buy-in Range */}
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-xs md:text-sm text-slate-400">Buy-in:</span>
-          <span className={cn("text-xs md:text-sm font-semibold", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
-            {formatChips(table.minBuyIn)} - {formatChips(table.maxBuyIn)}
-          </span>
-        </div>
-
-        {/* Players */}
-        <div className="flex items-center gap-2 mb-3">
-          <Users className="w-4 h-4 text-slate-400" />
-          <span className="text-xs md:text-sm text-slate-300">
-            {table.currentPlayers}/{table.maxPlayers} players
-          </span>
-          {isFull && (
-            <Badge variant="destructive" className="text-xs bg-destructive/80 text-white">
-              Full
-            </Badge>
-          )}
-        </div>
-
-        {/* Difficulty Badge */}
-        <Badge className={cn("text-xs border font-semibold", getDifficultyColor(table.difficulty))}>
-          {table.difficulty}
-        </Badge>
-
-        {/* Cannot Afford Message */}
-        {!canAfford && (
-          <div className="mt-2 text-xs text-destructive font-semibold flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            Need {formatChips(table.minBuyIn - playerChips)} more
-          </div>
-        )}
-      </button>
-    )
-  }
-
-  // Render table card in list view (more compact for mobile)
-  const renderListCard = (table: StakeTable) => {
-    const canAfford = canAffordTable(table)
-    const isSelected = selectedTable?.id === table.id
-    const isFull = table.currentPlayers >= table.maxPlayers
-
-    return (
-      <button
-        key={table.id}
-        onClick={() => handleSelectTable(table)}
-        disabled={!canAfford || isFull}
-        className={cn(
-          "relative w-full p-3 rounded-xl border-2 transition-all text-left",
-          "hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
-          "flex flex-col gap-2 backdrop-blur-sm",
-          isSelected
-            ? "border-[#FEB956] bg-gradient-to-r from-[#FEB956]/15 to-slate-900/40 shadow-lg shadow-[#FEB956]/10"
-            : "border-slate-800 bg-gradient-to-r from-slate-900/90 to-slate-950/90 hover:border-[#FEB956]/50",
-          !canAfford && "border-red-950 bg-gradient-to-r from-red-950/20 to-slate-950/90",
-        )}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {isSelected && <CheckCircle2 className="w-4 h-4 text-[#FEB956] flex-shrink-0" />}
-              <h3 className={cn("text-sm font-bold truncate", isSelected ? "text-[#FEB956]" : "text-slate-100")}>{table.name}</h3>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className={cn("font-medium", isSelected ? "text-[#FEB956]" : "text-slate-200")}>
-                {formatChips(table.smallBlind)}/{formatChips(table.bigBlind)}
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-slate-400">{formatChips(table.minBuyIn)} min</span>
-              <span className="text-slate-600">•</span>
-              <span className="text-slate-300 flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {table.currentPlayers}/{table.maxPlayers}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-1 flex-shrink-0">
-            {table.isVip && (
-              <Badge className="bg-gradient-to-r from-[#FEB956] to-amber-500 text-slate-950 border-0 text-xs font-bold">
-                VIP
-              </Badge>
-            )}
-            <Badge className={cn("text-xs border font-semibold", getDifficultyColor(table.difficulty))}>
-              {table.difficulty}
-            </Badge>
-            {isFull && (
-              <Badge variant="destructive" className="text-xs bg-destructive/80 text-white">
-                Full
-              </Badge>
-            )}
-          </div>
-        </div>
-        {!canAfford && (
-          <div className="text-xs text-destructive font-semibold flex items-center gap-1">
-            <Lock className="w-3 h-3" />
-            Need {formatChips(table.minBuyIn - playerChips)} more chips
-          </div>
-        )}
-      </button>
-    )
+    if (!selectedTable) return
+    onSelectTable(selectedTable)
+    onClose()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent
-        className={cn(
-          "p-0 gap-0 bg-gradient-to-br from-[#131a2e] via-[#111625] to-[#0f121d] border-slate-800 text-white",
-          isMobile ? "w-full h-full max-w-full max-h-full m-0 rounded-none" : "max-w-4xl max-h-[90vh]",
-        )}
-      >
-        <DialogHeader className={cn("border-b border-slate-800/80 bg-slate-900/40", isMobile ? "p-4 pb-3" : "p-6 pb-4")}>
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-              <DialogTitle
-                className={cn("font-bold flex items-center gap-2 text-[#FEB956]", isMobile ? "text-lg" : "text-2xl")}
-              >
-                <TrendingUp className={cn(isMobile ? "w-5 h-5" : "w-6 h-6", "text-[#FEB956] flex-shrink-0")} />
-                <span className="truncate">
-                  {isMobile
-                    ? "Select Table"
-                    : `Select Your Table - ${gameMode === "sng"
-                      ? "SNG"
-                      : gameMode === "allin"
-                        ? "ALL IN OR FOLD"
-                        : gameMode === "cash"
-                          ? "CASH GAME"
-                          : "OMAHA"
-                    }`}
-                </span>
-              </DialogTitle>
-              <div className="flex items-center gap-2 mt-2 text-xs md:text-sm text-slate-400">
-                <Coins className="w-4 h-4 flex-shrink-0 text-[#FEB956]" />
-                <span>
-                  Your Chips: <span className="text-[#FEB956] font-semibold">{formatChips(playerChips)}</span>
-                </span>
-              </div>
-            </div>
-            {isMobile && (
-              <button
-                onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-                className="p-2 rounded-lg bg-slate-900/50 hover:bg-slate-900 border border-slate-800 transition-colors"
-                aria-label="Toggle view mode"
-              >
-                {viewMode === "grid" ? (
-                  <List className="w-5 h-5 text-[#FEB956]" />
-                ) : (
-                  <Grid3x3 className="w-5 h-5 text-[#FEB956]" />
-                )}
-              </button>
-            )}
-          </div>
-        </DialogHeader>
-
-        {/* Horizontal scroll view for mobile grid */}
-        {isMobile && viewMode === "grid" ? (
-          <div className="relative flex-1 overflow-hidden bg-gradient-to-b from-[#111625]/50 to-[#0f121d]/30">
-            <button
-              onClick={() => scroll("left")}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-slate-900/90 backdrop-blur-sm border border-[#FEB956]/30 shadow-lg hover:bg-slate-850 transition-colors"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="w-5 h-5 text-[#FEB956]" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-slate-900/90 backdrop-blur-sm border border-[#FEB956]/30 shadow-lg hover:bg-slate-850 transition-colors"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-[#FEB956]" />
-            </button>
-            <div
-              ref={scrollRef}
-              className="flex gap-4 p-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide h-full"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-            >
-              {tables.map((table) => (
-                <div key={table.id} className="snap-center flex-shrink-0">
-                  {renderGridCard(table)}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <ScrollArea className={cn(isMobile ? "flex-1" : "h-[500px]", isMobile ? "p-4" : "p-6")}>
-            <div
-              className={cn(
-                "gap-3",
-                isMobile && viewMode === "list" ? "flex flex-col" : "grid grid-cols-1 md:grid-cols-2 gap-4",
-              )}
-            >
-              {tables.map((table) => (isMobile && viewMode === "list" ? renderListCard(table) : renderGridCard(table)))}
-            </div>
-          </ScrollArea>
-        )}
-
-        <div
-          className={cn(
-            "border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md flex justify-between items-center gap-2",
-            isMobile ? "p-4 pt-3 flex-col" : "p-6 pt-4 flex-row",
-          )}
+    <div className="fixed inset-0 z-[70] flex flex-col bg-[#07090E]">
+      {/* Header */}
+      <header className="flex shrink-0 items-center gap-3 border-b border-slate-800/70 bg-[#0C0F16] px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700/50 bg-[#191C22] text-slate-300"
+          aria-label="Back"
         >
-          <div className={cn("text-xs md:text-sm text-slate-400", isMobile && "w-full text-center")}>
-            {selectedTable ? (
-              <div className="flex flex-wrap items-center justify-center gap-1">
-                <span className="font-semibold text-[#FEB956]">{selectedTable.name}</span>
-                <span className="text-slate-600">•</span>
-                <span>
-                  Buy-in: <span className="text-[#FEB956] font-semibold">{formatChips(selectedTable.minBuyIn)}</span>
-                </span>
-              </div>
-            ) : (
-              <span>Select a table to continue</span>
-            )}
-          </div>
-          <div className={cn("flex gap-2", isMobile && "w-full")}>
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className={cn("border-slate-800 bg-slate-900/50 hover:bg-slate-900 hover:text-white text-slate-300", isMobile && "flex-1")}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={!selectedTable}
-              className={cn(
-                "bg-gradient-to-r from-[#FEB956] to-amber-500 hover:from-[#FEB956]/90 hover:to-amber-500/90 text-slate-950 font-extrabold shadow-lg disabled:opacity-50 disabled:bg-slate-800 disabled:text-slate-500",
-                isMobile ? "flex-1" : "min-w-32",
-              )}
-            >
-              {isMobile ? "Next" : "Next: Choose Seat"}
-            </Button>
-          </div>
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-bold text-[#E5A93C]">Select Table</h1>
+          <p className="truncate text-[11px] text-slate-400">
+            {modeLabel(gameMode)}
+            <span className="mx-1.5 text-slate-600">·</span>
+            <Coins className="mr-0.5 inline h-3 w-3 text-[#FEB956]" />
+            <span className="font-semibold text-[#FEB956]">{formatChips(playerChips)}</span>
+          </p>
         </div>
-      </DialogContent>
-    </Dialog>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-700/50 bg-[#191C22] text-slate-400"
+          aria-label="Close"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </header>
+
+      {/* List */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+        <div className="mx-auto flex max-w-[430px] flex-col gap-2.5 pb-2">
+          {tables.map((table) => {
+            const affordable = canAfford(table)
+            const full = table.currentPlayers >= table.maxPlayers
+            const selected = selectedTable?.id === table.id
+            const disabled = !affordable || full
+
+            return (
+              <button
+                key={table.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => setSelectedTable(table)}
+                className={cn(
+                  "w-full rounded-xl border px-3.5 py-3 text-left transition active:scale-[0.99]",
+                  selected
+                    ? "border-[#E5A93C] bg-[#E5A93C]/10 shadow-[0_0_20px_rgba(229,169,60,0.12)]"
+                    : "border-slate-800 bg-[#151922]",
+                  disabled && "opacity-45",
+                )}
+              >
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-1.5">
+                      {selected && <CheckCircle2 className="h-4 w-4 shrink-0 text-[#E5A93C]" />}
+                      <h3
+                        className={cn(
+                          "truncate text-sm font-bold",
+                          selected ? "text-[#E5A93C]" : "text-slate-100",
+                        )}
+                      >
+                        {table.name}
+                      </h3>
+                      {table.isVip && (
+                        <Badge className="shrink-0 border-0 bg-gradient-to-r from-[#E5A93C] to-amber-500 px-1.5 py-0 text-[10px] font-bold text-[#020617]">
+                          VIP
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-400">
+                      <span className={cn("font-semibold", selected ? "text-[#FEB956]" : "text-slate-200")}>
+                        {formatChips(table.smallBlind)}/{formatChips(table.bigBlind)}
+                      </span>
+                      <span className="text-slate-600">·</span>
+                      <span>Min {formatChips(table.minBuyIn)}</span>
+                      <span className="text-slate-600">·</span>
+                      <span className="inline-flex items-center gap-0.5">
+                        <Users className="h-3 w-3" />
+                        {table.currentPlayers}/{table.maxPlayers}
+                      </span>
+                    </div>
+
+                    {!affordable && (
+                      <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-red-400">
+                        <Lock className="h-3 w-3" />
+                        Need {formatChips(table.minBuyIn - playerChips)} more
+                      </p>
+                    )}
+                    {full && affordable && (
+                      <p className="mt-1.5 text-[11px] font-semibold text-red-400">Table full</p>
+                    )}
+                  </div>
+
+                  <Badge className={cn("shrink-0 border text-[10px] font-semibold", difficultyClass(table.difficulty))}>
+                    {table.difficulty}
+                  </Badge>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="shrink-0 border-t border-slate-800/70 bg-[#0C0F16] px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <p className="mb-2 text-center text-[11px] text-slate-500">
+          {selectedTable ? (
+            <>
+              <span className="font-semibold text-[#E5A93C]">{selectedTable.name}</span>
+              <span className="mx-1 text-slate-600">·</span>
+              Buy-in from{" "}
+              <span className="font-semibold text-[#FEB956]">{formatChips(selectedTable.minBuyIn)}</span>
+            </>
+          ) : (
+            "Select a table to continue"
+          )}
+        </p>
+        <div className="mx-auto flex max-w-[430px] gap-2">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            className="h-12 flex-1 border-slate-700 bg-[#151922] text-slate-200 hover:bg-slate-800 hover:text-white"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={!selectedTable}
+            className="h-12 flex-1 bg-gradient-to-b from-[#E5A93C] to-[#B87C20] font-bold text-[#020617] hover:opacity-95 disabled:opacity-40"
+          >
+            Next: Seat
+          </Button>
+        </div>
+      </footer>
+    </div>
   )
 }
-
